@@ -14,15 +14,24 @@ People who need study support, work, farming help, retirement support, or health
 
 ## Approach and Logic
 
-_To be completed in later milestones._ Code decides eligibility. Optional AI only rephrases explanations. Missing answers produce possibly eligible, never an automatic no.
+Eligibility is evaluated by deterministic rules. Optional AI is not required for
+the current workflow; explanations are generated from the rule results. Missing
+answers produce `POSSIBLY_ELIGIBLE`, never an automatic rejection.
 
 ## How the Solution Works
 
-_To be completed in later milestones._
+The application seeds a local SQLite database from `seed/`, accepts a minimal
+profile without identity numbers, evaluates matching opportunities, and returns
+explanations, documents, official links, and follow-up questions. Health topics
+are available as a separate awareness catalogue. The browser test UI is served
+by the same FastAPI process.
 
 ## Architecture
 
-_To be completed in later milestones._
+`app/` contains the FastAPI application, SQLAlchemy models, Pydantic schemas,
+eligibility rules, services, and routers. `seed/` contains offline catalogue
+data. `ui/` contains the dependency-free browser test UI. `tests/` covers the
+rules, APIs, validation, seed loading, plans, and UI shell.
 
 ## Setup and Run (works offline)
 
@@ -34,8 +43,6 @@ python -m venv .venv
 pip install -r requirements.txt
 copy .env.example .env
 ```
-
-Application startup and API commands will be added in later milestones.
 
 ### Test UI
 
@@ -53,7 +60,19 @@ require a separate frontend build step.
 
 ## API Reference
 
-_To be completed in later milestones._ Base path: `/api/v1`.
+Base path: `/api/v1`.
+
+- `GET /health`
+- `GET /opportunities`
+- `GET /opportunities/{id}`
+- `GET /health-topics`
+- `GET /health-topics/search?q=...`
+- `GET /health-topics/{id}`
+- `POST /eligibility/check`
+- `POST /plan`
+- `POST /plan?format=markdown`
+
+Interactive API documentation is available at `/docs` and `/redoc`.
 
 ## Testing
 
@@ -64,20 +83,42 @@ pytest
 
 ## Security Notes
 
-_To be completed in later milestones._
+Profiles are evaluated in memory and are not written to the database or logs.
+The API applies validation, CORS configuration, standard error envelopes, and
+basic security response headers. Seed records remain unverified until manually
+reviewed against their official sources.
 
 ## Accessibility Notes
 
-The backend is JSON-only in this phase. A later test UI (not built until requested) must label every input, support keyboard use, and work at phone width.
+The test UI labels form controls, uses semantic sections and buttons, supports
+keyboard-accessible native controls, and includes a responsive phone layout.
+Full screen-reader, contrast, and automated browser accessibility testing remain
+recommended before production use.
 
 ## Assumptions
 
 See `docs/ASSUMPTIONS.md`.
 
-## Limitations
+## Milestone status
 
-Scaffold only (milestone M0). Eligibility engine, APIs, sync, and full tests are not present yet.
+Completed:
 
-## Future Work
+- M0 foundation and configuration
+- M1 local database and seed data
+- M2 deterministic eligibility engine
+- M3 opportunity catalogue API
+- M4 health-topic API
+- M5 eligibility API
+- M6 JSON and Markdown action plans
+- M7 template explanations
+- M8 browser test UI
+- M9 automated baseline tests
 
-Complete milestones M1–M9 of the backend. Do not add a UI until explicitly requested.
+Remaining roadmap:
+
+- Implement configured live-data synchronization and `SyncLog` updates.
+- Manually verify catalogue rules, documents, URLs, and freshness dates.
+- Add optional AI provider adapters with caching and deterministic fallback.
+- Add authenticated admin/content-management workflows.
+- Add rate limiting, audit logging, and production deployment hardening.
+- Add browser end-to-end and automated accessibility coverage.
