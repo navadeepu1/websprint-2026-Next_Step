@@ -44,7 +44,7 @@ For this project, Groq is the recommended hosted provider workflow.
 ```text
 AI_PROVIDER=groq
 GROQ_API_KEY=your-groq-key
-GROQ_MODEL=llama-3.1-8b-instant
+GROQ_MODEL=openai/gpt-oss-20b
 AI_TIMEOUT_SECONDS=15
 AI_MAX_TOKENS=300
 AI_TEMPERATURE=0
@@ -75,7 +75,7 @@ Expected output:
 ```text
 ai_provider   ai_configured   ai_model
 ------------  --------------  ----------------------
-groq          True            llama-3.1-8b-instant
+groq          True            openai/gpt-oss-20b
 ```
 
 The endpoint reports configuration state only. It never returns the API key.
@@ -220,7 +220,7 @@ logic or action-plan generation.
 |---|---|---|
 | `AI_PROVIDER` | Active provider | `noop` or `groq` |
 | `GROQ_API_KEY` | Secret Groq credential | Local `.env` only |
-| `GROQ_MODEL` | Groq model name | `llama-3.1-8b-instant` |
+| `GROQ_MODEL` | Groq model name | `openai/gpt-oss-20b` |
 | `AI_TIMEOUT_SECONDS` | Maximum provider wait | `15` |
 | `AI_MAX_TOKENS` | Maximum rewrite size | `300` |
 | `AI_TEMPERATURE` | Generation randomness | `0` |
@@ -252,7 +252,7 @@ values or provider credentials in errors.
 Set `GROQ_MODEL` to a model available to your Groq account. The default is:
 
 ```text
-llama-3.1-8b-instant
+openai/gpt-oss-20b
 ```
 
 ### Revoke an exposed key

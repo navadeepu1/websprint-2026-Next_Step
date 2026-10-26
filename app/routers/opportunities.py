@@ -2,7 +2,7 @@ import hashlib
 import json
 
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from app.constants import CATEGORIES
 from app.schemas.common import error_payload
@@ -41,7 +41,7 @@ def list_items(
         session.close()
     etag = hashlib.md5(json.dumps(payload, sort_keys=True, default=str).encode("utf-8"), usedforsecurity=False).hexdigest()
     if request.headers.get("if-none-match") == etag:
-        return JSONResponse(status_code=304, content=None, headers={"ETag": etag, "Cache-Control": "max-age=300"})
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "max-age=300"})
     return JSONResponse(content=payload, headers={"ETag": etag, "Cache-Control": "max-age=300"})
 
 

@@ -296,10 +296,10 @@ are:
 | `DATABASE_URL` | `sqlite:///data/nextstep.db` | SQLAlchemy database URL |
 | `CORS_ORIGINS` | empty | Comma-separated allowed origins |
 | `ADMIN_API_KEY` | empty | Required for admin routes |
-| `AI_PROVIDER` | `noop` | `noop`, `gemini`, or `groq` |
+| `AI_PROVIDER` | `groq` | `noop`, `gemini`, or `groq` |
 | `GEMINI_API_KEY` | empty | Gemini API key |
 | `GROQ_API_KEY` | empty | Groq API key |
-| `GROQ_MODEL` | `llama-3.1-8b-instant` | Groq chat-completion model |
+| `GROQ_MODEL` | `openai/gpt-oss-20b` | Groq chat-completion model; verify availability in your Groq account |
 | `AI_TIMEOUT_SECONDS` | `15` | AI request timeout |
 | `AI_MAX_TOKENS` | `300` | Maximum generated explanation length |
 | `AI_TEMPERATURE` | `0` | Generation randomness; `0` is deterministic |
@@ -308,6 +308,25 @@ are:
 | `DATA_SOURCE_URLS` | empty | Comma-separated JSON catalogue URLs |
 | `ALLOWED_STATES` | All Indian state/UT codes plus `ALL` | Accepted profile state codes; override to restrict a deployment |
 | `RATE_LIMIT_PER_MINUTE` | `60` | Per-client in-memory request limit |
+
+For open-ended chatbot answers, configure Groq before starting the server:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+# Set AI_PROVIDER=groq and GROQ_API_KEY=your-key
+python -m uvicorn app.main:app --reload
+```
+
+Restart Uvicorn after changing `.env`; settings are loaded when the process
+starts. If the chatbot header says “Offline help mode”, the server did not
+load a Groq provider/key and will intentionally return only built-in help
+responses.
+
+Never put a real key in `.env.example`, README files, screenshots, or chat
+messages. The key previously pasted into `.env.example` must be revoked in the
+Groq console and replaced with a new key stored only in the ignored local
+`.env` file.
 | `REQUEST_BODY_LIMIT_BYTES` | `32768` | Maximum request body size |
 | `SYNC_TIMEOUT_SECONDS` | `15` | Live-source request timeout |
 | `AUDIT_LOG_RETENTION_DAYS` | `365` | Intended audit retention policy |
@@ -589,7 +608,7 @@ The response includes fields similar to:
 {
   "ai_provider": "groq",
   "ai_configured": true,
-  "ai_model": "llama-3.1-8b-instant"
+  "ai_model": "openai/gpt-oss-20b"
 }
 ```
 
@@ -601,7 +620,7 @@ README files, source code, screenshots, or commits:
 ```text
 AI_PROVIDER=groq
 GROQ_API_KEY=your-new-groq-key
-GROQ_MODEL=llama-3.1-8b-instant
+GROQ_MODEL=openai/gpt-oss-20b
 AI_TIMEOUT_SECONDS=15
 AI_MAX_TOKENS=300
 AI_TEMPERATURE=0

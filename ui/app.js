@@ -268,6 +268,7 @@ function initChatbot() {
     returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : launcher;
     panel.hidden = false;
     launcher.setAttribute("aria-expanded", "true");
+    refreshChatStatus();
     $("#chat-input").focus();
   };
   const close = () => {
@@ -285,6 +286,19 @@ function initChatbot() {
     sendChatMessage($("#chat-input").value);
   });
   $$("#chat-suggestions button").forEach((button) => button.addEventListener("click", () => sendChatMessage(button.textContent)));
+}
+
+async function refreshChatStatus() {
+  const header = document.querySelector("#chat-title")?.parentElement?.querySelector("small");
+  if (!header) return;
+  try {
+    const health = await request("/health");
+    header.textContent = health.ai_configured && health.ai_provider === "groq"
+      ? "AI online — ask anything"
+      : "Offline help mode — configure Groq for general questions";
+  } catch (_) {
+    header.textContent = "Ask anything — website help or general questions";
+  }
 }
 
 async function generatePlan() {

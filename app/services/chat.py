@@ -63,7 +63,12 @@ def _fallback(message: str) -> str:
         return "The interactive API documentation is available at /docs, and the alternative documentation view is at /redoc while the server is running."
     if any(word in lowered for word in ("link", "website", "portal", "access", "where")):
         return "Use the Opportunities section to open the official source for a catalogue record. NextStep does not replace those portals, so verify the current application instructions there."
-    return "I can explain how to use NextStep, find the right section, or describe the eligibility, opportunities, health-topic, and action-plan workflows. What would you like to do?"
+    return (
+        "I can answer this kind of question when the Groq AI provider is enabled. "
+        "The current server is using offline template mode, so it can only answer "
+        "the built-in NextStep help topics. Set AI_PROVIDER=groq and GROQ_API_KEY "
+        "in .env, then restart the server."
+    )
 
 
 def answer_chat(message: str, history: Sequence[dict[str, str]]) -> tuple[str, str]:

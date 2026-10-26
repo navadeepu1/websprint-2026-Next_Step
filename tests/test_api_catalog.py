@@ -41,6 +41,7 @@ def test_opportunities_list_and_etag(client: TestClient) -> None:
     etag = response.headers["ETag"]
     again = client.get("/api/v1/opportunities?limit=5", headers={"If-None-Match": etag})
     assert again.status_code == 304
+    assert again.content == b""
 
 
 def test_opportunities_filters(client: TestClient) -> None:
