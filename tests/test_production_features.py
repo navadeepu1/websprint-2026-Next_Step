@@ -111,3 +111,54 @@ def test_groq_explanation_uses_bearer_auth_and_cache(tmp_path: Path, monkeypatch
 
     engine.dispose()
     get_settings.cache_clear()
+
+
+def test_chatbot_template_guidance(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AI_PROVIDER", "noop")
+    get_settings.cache_clear()
+    from app.services.chat import answer_chat
+
+    reply, source = answer_chat("Where do I check eligibility?", [])
+    assert source == "template"
+    assert "Check eligibility" in reply
+    get_settings.cache_clear()
+
+
+def test_chatbot_uses_groq_with_history(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{(tmp_path / 'chat.db').as_posix()}")
+    monkeypatch.setenv("AI_PROVIDER", "groq")
+    monkeypatch.setenv("GROQ_API_KEY", "test-chat-key")
+    get_settings.cache_clear()
+    from app.services.chat import answer_chat
+
+    with respx.mock:
+        route = respx.post("https://api.groq.com/openai/v1/chat/completions").mock(
+            return_value=httpx.Response(
+                200,
+                json={"choices": [{"message": {"content": "Open Opportunities to browse records."}}]},
+            )
+        )
+        reply, source = answer_chat("Where can I browse schemes?", [{"role": "user", "content": "Hi"}])
+        assert source == "ai"
+        assert "Opportunities" in reply
+        assert route.calls[0].request.headers["Authorization"] == "Bearer test-chat-key"
+        assert b"Where can I browse schemes?" in route.calls[0].request.content
+    get_settings.cache_clear()
+
+
+def test_chat_endpoint_returns_structured_response(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{(tmp_path / 'chat-api.db').as_posix()}")
+    monkeypatch.setenv("AI_PROVIDER", "noop")
+    get_settings.cache_clear()
+    from app.main import create_app
+
+    with TestClient(create_app()) as client:
+        response = client.post(
+            "/api/v1/chat",
+            json={"message": "Where are the API docs?", "history": []},
+        )
+    assert response.status_code == 200
+    assert response.json()["source"] == "template"
+    assert response.json()["provider"] == "template"
+    assert "/docs" in response.json()["reply"]
+    get_settings.cache_clear()

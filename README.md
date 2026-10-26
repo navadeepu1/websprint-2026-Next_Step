@@ -43,6 +43,7 @@ The project also provides:
 - A searchable health-awareness catalogue
 - A responsive browser test UI
 - A FastAPI JSON API
+- An interactive “Ask NextStep” website guide chatbot powered by Groq when configured
 - SQLite persistence through SQLAlchemy
 - Local seed data for offline development
 - Optional live catalogue synchronization
@@ -426,6 +427,20 @@ POST /api/v1/plan?format=markdown
 
 Both endpoints accept the same profile body as the eligibility endpoint.
 
+### Website chatbot
+
+The browser UI includes an **Ask NextStep** chatbot in the lower-right corner.
+It explains how to use this website, where to find eligibility checks,
+opportunities, health topics, action plans, API documentation, and official
+catalogue links. It is not a replacement for the eligibility endpoint or an
+official application decision.
+
+The API endpoint is:
+
+```text
+POST /api/v1/chat
+```
+
 ## Live-data synchronization
 
 Live synchronization is optional. The application remains usable with local
@@ -539,6 +554,11 @@ Groq is used in both:
 
 - `POST /api/v1/eligibility/check`
 - `POST /api/v1/plan`
+- `POST /api/v1/chat`
+
+The chatbot sends the current question and at most eight recent messages to
+the server. The Groq key remains server-side and is never exposed to the
+browser.
 
 The health endpoint reports the active provider, selected model, and whether
 the provider key is configured:

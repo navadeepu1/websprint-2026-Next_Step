@@ -92,6 +92,43 @@ POST /api/v1/plan
 POST /api/v1/plan?format=markdown
 ```
 
+The browser UI also includes an **Ask NextStep** chatbot. It uses Groq to
+answer general questions about this website, such as where to find an
+eligibility check, how to browse opportunity records, where official links
+appear, and how to open the API docs:
+
+```text
+POST /api/v1/chat
+```
+
+Example request:
+
+```json
+{
+  "message": "Where can I see official links?",
+  "history": [
+    {"role": "user", "content": "How does this website work?"},
+    {"role": "assistant", "content": "NextStep helps you discover opportunities."}
+  ]
+}
+```
+
+Example response:
+
+```json
+{
+  "reply": "Open Opportunities and select a record to see its official source.",
+  "source": "ai",
+  "provider": "groq"
+}
+```
+
+The server limits each message to 1,200 characters and keeps at most eight
+recent messages. It supplies fixed NextStep website context to Groq, so the
+chatbot is focused on navigating this application. If Groq is not configured
+or unavailable, common website questions use a deterministic built-in guide
+and return `"source": "template"`.
+
 The request body is the normal NextStep profile. Example:
 
 ```powershell

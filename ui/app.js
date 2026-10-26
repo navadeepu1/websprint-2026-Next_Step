@@ -7,6 +7,7 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => 
 
 let lastProfile = null;
 let toastTimer;
+const chatHistory = [];
 
 function showToast(message) {
   const toast = $("#toast");
@@ -179,6 +180,61 @@ async function generatePlan() {
     } else {
       area.innerHTML = `<div class="result-card"><h2>Checklist</h2><ul class="checklist">${result.checklist.map((item) => `<li><input type="checkbox" aria-label="${escapeHtml(item.text)}"><span>${escapeHtml(item.text)}</span></li>`).join("")}</ul>${result.documents.length ? `<h3>Documents to gather</h3><p>${escapeHtml(result.documents.join(" • "))}</p>` : ""}${result.links.length ? `<h3>Official links</h3><div class="link-list">${result.links.map((link) => `<a href="${escapeHtml(link.url || "#")}" target="_blank" rel="noreferrer">${escapeHtml(link.title || link.url || "Open link")} ↗</a>`).join("")}</div>` : ""}${result.warnings.map((warning) => `<div class="notice">${escapeHtml(warning)}</div>`).join("")}</div>`;
     }
+
+    function addChatMessage(role, text) {
+      const messages = $("#chat-messages");
+      const message = document.createElement("div");
+      message.className = `chat-message ${role}`;
+      message.textContent = text;
+      messages.appendChild(message);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function sendChatMessage(text) {
+      const message = text.trim();
+      if (!message) return;
+      addChatMessage("user", message);
+      chatHistory.push({ role: "user", content: message });
+      $("#chat-input").value = "";
+      const pending = document.createElement("div");
+      pending.className = "chat-message assistant pending";
+      pending.textContent = "Thinking…";
+      $("#chat-messages").appendChild(pending);
+      try {
+        const result = await request("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, history: chatHistory.slice(-8) }),
+        });
+        pending.remove();
+        addChatMessage("assistant", result.reply);
+        chatHistory.push({ role: "assistant", content: result.reply });
+      } catch (problem) {
+        pending.remove();
+        addChatMessage("assistant", `I couldn't answer right now. ${problem.message}`);
+      }
+    }
+
+    function initChatbot() {
+      const launcher = $("#chat-launcher");
+      const panel = $("#chat-panel");
+      const open = () => {
+        panel.hidden = false;
+        launcher.setAttribute("aria-expanded", "true");
+        $("#chat-input").focus();
+      };
+      const close = () => {
+        panel.hidden = true;
+        launcher.setAttribute("aria-expanded", "false");
+      };
+      launcher.addEventListener("click", () => (panel.hidden ? open() : close()));
+      $("#chat-close").addEventListener("click", close);
+      $("#chat-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendChatMessage($("#chat-input").value);
+      });
+      $$("#chat-suggestions button").forEach((button) => button.addEventListener("click", () => sendChatMessage(button.textContent)));
+    }
     showToast("Your action plan is ready.");
   } catch (problem) {
     area.hidden = false;
@@ -209,6 +265,7 @@ function init() {
   $("#search-topics").addEventListener("click", () => loadTopics($("#topic-search").value.trim()));
   $("#load-topics").addEventListener("click", () => { $("#topic-search").value = ""; loadTopics(); });
   $("#generate-plan").addEventListener("click", generatePlan);
+  initChatbot();
   window.addEventListener("hashchange", () => navigate(window.location.hash.slice(1)));
   navigate(window.location.hash.slice(1) || "dashboard");
   loadDashboard();
