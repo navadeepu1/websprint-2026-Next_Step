@@ -68,3 +68,23 @@ class AuditLog(Base):
     actor: Mapped[str] = mapped_column(String(120), nullable=False)
     detail: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True, nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(300), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_sessions"
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

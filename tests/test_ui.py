@@ -21,3 +21,5 @@ def test_ui_shell_and_assets_are_served() -> None:
     assert "initChatbot();" in script.text
     assert 'id="topic-search-form"' in page.text
     assert 'id="chat-launcher"' in page.text
+    assert 'id="auth-form"' in page.text
+    assert "auth-button" in script.text

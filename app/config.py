@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     request_body_limit_bytes: int = Field(default=32768, ge=1024)
     sync_timeout_seconds: float = Field(default=15.0, gt=0, le=120)
     audit_log_retention_days: int = Field(default=365, ge=1)
+    auth_secret: str = "change-this-development-secret"
+    auth_session_hours: int = Field(default=24, ge=1, le=720)
 
     @field_validator("ai_provider")
     @classmethod

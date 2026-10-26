@@ -9,9 +9,13 @@ from app.config import get_settings
 from app.database import Base, make_engine, make_session_factory
 from app.errors import register_error_handlers
 from app.middleware import install_request_guards
-from app.routers import admin, chat, eligibility, health, health_topics, opportunities, plan
+from app.routers import admin, auth, chat, eligibility, health, health_topics, opportunities, plan
 from app.seed import database_is_empty, load_seed_data
 from app.services.sync import sync_configured_sources
+from app.models import User
+from app.services.auth import hash_password
+from datetime import datetime, timezone
+from sqlalchemy import select
 
 
 def _apply_security_headers(app: FastAPI) -> None:
@@ -40,6 +44,11 @@ def create_app() -> FastAPI:
         try:
             if database_is_empty(session):
                 load_seed_data(session)
+            if session.scalar(select(User).where(User.email == "demo@nextstep.local")) is None:
+                now = datetime.now(timezone.utc).replace(tzinfo=None)
+                session.add(User(email="demo@nextstep.local", display_name="Demo Citizen", password_hash=hash_password("Demo@12345"), created_at=now))
+                session.add(User(email="student@nextstep.local", display_name="Student Demo", password_hash=hash_password("Student@12345"), created_at=now))
+                session.commit()
         finally:
             session.close()
         app.state.engine = engine
@@ -76,6 +85,7 @@ def create_app() -> FastAPI:
     application.include_router(plan.router, prefix="/api/v1")
     application.include_router(admin.router, prefix="/api/v1")
     application.include_router(chat.router, prefix="/api/v1")
+    application.include_router(auth.router, prefix="/api/v1")
     Path("data").mkdir(exist_ok=True)
     ui_directory = Path(__file__).resolve().parent.parent / "ui"
     application.mount("/", StaticFiles(directory=ui_directory, html=True), name="ui")

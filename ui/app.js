@@ -8,6 +8,8 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => 
 let lastProfile = null;
 let toastTimer;
 const chatHistory = [];
+let authMode = "login";
+let accessToken = localStorage.getItem("nextstep_access_token");
 
 function showToast(message) {
   const toast = $("#toast");
@@ -18,8 +20,9 @@ function showToast(message) {
 }
 
 async function request(path, options = {}) {
+  const authHeaders = accessToken ? { Authorization: "Bearer " + accessToken } : {};
   const response = await fetch(`${API}${path}`, {
-    headers: { "Accept": "application/json", ...(options.headers || {}) },
+    headers: { "Accept": "application/json", ...authHeaders, ...(options.headers || {}) },
     ...options,
   });
   if (!response.ok) {
@@ -30,13 +33,71 @@ async function request(path, options = {}) {
     } catch (_) {
       // The status text is the useful fallback for non-JSON errors.
     }
+
     throw new Error(message);
   }
   if (response.status === 204 || response.status === 304) return null;
   return response.headers.get("content-type")?.includes("text/") ? response.text() : response.json();
 }
 
-function setLoading(container, message = "Loading…") {
+function updateAuthButton(user) {
+  const button = $("#auth-button");
+  button.textContent = user ? `Sign out (${user.display_name})` : "Sign in";
+}
+
+function openAuth(mode = "login") {
+  authMode = mode;
+  $("#auth-dialog").hidden = false;
+  $("#auth-title").textContent = mode === "login" ? "Welcome back" : "Create your account";
+  $("#auth-subtitle").textContent = mode === "login"
+    ? "Sign in to your NextStep session."
+    : "Create a local account for testing.";
+  $("#auth-name-label").hidden = mode === "login";
+  $("#auth-submit").textContent = mode === "login" ? "Sign in" : "Create account";
+  $("#auth-switch").textContent = mode === "login" ? "Create a new account" : "I already have an account";
+  $("#auth-password").minLength = mode === "login" ? 1 : 8;
+  $("#auth-error").hidden = true;
+  $("#auth-email").focus();
+}
+
+function closeAuth() {
+  $("#auth-dialog").hidden = true;
+}
+
+async function submitAuth(event) {
+  event.preventDefault();
+  const error = $("#auth-error");
+  error.hidden = true;
+  const payload = { email: $("#auth-email").value, password: $("#auth-password").value };
+  if (authMode === "register") payload.display_name = $("#auth-name").value;
+  try {
+    const result = await request(`/auth/${authMode}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    accessToken = result.access_token;
+    localStorage.setItem("nextstep_access_token", accessToken);
+    updateAuthButton(result.user);
+    closeAuth();
+    showToast(`Signed in as ${result.user.display_name}.`);
+  } catch (problem) {
+    error.textContent = problem.message;
+    error.hidden = false;
+  }
+}
+
+async function initializeAuth() {
+  if (!accessToken) return;
+  try {
+    updateAuthButton(await request("/auth/me"));
+  } catch (_) {
+    accessToken = null;
+    localStorage.removeItem("nextstep_access_token");
+  }
+}
+
+function setLoading(container, message = "Loadingâ€¦") {
   container.innerHTML = `<div class="loading">${escapeHtml(message)}</div>`;
 }
 
@@ -80,8 +141,8 @@ function reasonMarkup(reason) {
 
 function eligibilityMarkup(payload) {
   const counts = payload.counts;
-  const summary = `<div class="result-summary"><span class="count-chip good">✓ ${counts.ELIGIBLE} eligible</span><span class="count-chip warn">◐ ${counts.POSSIBLY_ELIGIBLE} possibly eligible</span><span class="count-chip">× ${counts.NOT_ELIGIBLE} not eligible</span></div>`;
-  const cards = payload.results.length ? payload.results.map((item) => `<article class="result-card"><div class="result-top"><div><span class="card-tag">${escapeHtml(item.category.replaceAll("_", " "))}</span><h3>${escapeHtml(item.title)}</h3></div><span class="status ${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll("_", " "))}</span></div>${item.reasons.map(reasonMarkup).join("")}${item.near_miss ? `<p><strong>Near miss:</strong> ${escapeHtml(item.near_miss)}</p>` : ""}<p><strong>Documents:</strong> ${escapeHtml(item.documents.join(", ") || "Check the official portal")}</p>${item.official_url ? `<a class="text-link" href="${escapeHtml(item.official_url)}" target="_blank" rel="noreferrer">Open official source ↗</a>` : ""}</article>`).join("") : `<div class="empty">No matching opportunities were found for this profile.</div>`;
+  const summary = `<div class="result-summary"><span class="count-chip good">âœ“ ${counts.ELIGIBLE} eligible</span><span class="count-chip warn">â— ${counts.POSSIBLY_ELIGIBLE} possibly eligible</span><span class="count-chip">Ã— ${counts.NOT_ELIGIBLE} not eligible</span></div>`;
+  const cards = payload.results.length ? payload.results.map((item) => `<article class="result-card"><div class="result-top"><div><span class="card-tag">${escapeHtml(item.category.replaceAll("_", " "))}</span><h3>${escapeHtml(item.title)}</h3></div><span class="status ${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll("_", " "))}</span></div>${item.reasons.map(reasonMarkup).join("")}${item.near_miss ? `<p><strong>Near miss:</strong> ${escapeHtml(item.near_miss)}</p>` : ""}<p><strong>Documents:</strong> ${escapeHtml(item.documents.join(", ") || "Check the official portal")}</p>${item.official_url ? `<a class="text-link" href="${escapeHtml(item.official_url)}" target="_blank" rel="noreferrer">Open official source â†—</a>` : ""}</article>`).join("") : `<div class="empty">No matching opportunities were found for this profile.</div>`;
   return `${summary}${payload.explanation ? `<div class="notice">${escapeHtml(payload.explanation)}</div>` : ""}${cards}${payload.health_topics?.length ? `<div class="notice">${escapeHtml(payload.health_disclaimer)}</div>` : ""}`;
 }
 
@@ -93,7 +154,7 @@ async function checkEligibility(event) {
     lastProfile = profileFromForm();
     const area = $("#eligibility-results");
     area.hidden = false;
-    setLoading(area, "Evaluating opportunities against your profile…");
+    setLoading(area, "Evaluating opportunities against your profileâ€¦");
     const payload = await request("/eligibility/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -108,7 +169,7 @@ async function checkEligibility(event) {
 }
 
 function opportunityMarkup(item) {
-  return `<article class="opportunity-card"><span class="card-tag">${escapeHtml(item.category.replaceAll("_", " "))}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="card-footer"><span class="status ${item.verified ? "ELIGIBLE" : "POSSIBLY_ELIGIBLE"}">${item.verified ? "Verified" : "Verify first"}</span><button class="text-link detail-button" data-opportunity="${escapeHtml(item.id)}">View details →</button></div></article>`;
+  return `<article class="opportunity-card"><span class="card-tag">${escapeHtml(item.category.replaceAll("_", " "))}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="card-footer"><span class="status ${item.verified ? "ELIGIBLE" : "POSSIBLY_ELIGIBLE"}">${item.verified ? "Verified" : "Verify first"}</span><button class="text-link detail-button" data-opportunity="${escapeHtml(item.id)}">View details â†’</button></div></article>`;
 }
 
 async function loadOpportunities() {
@@ -128,12 +189,12 @@ async function loadOpportunities() {
 async function showOpportunity(id) {
   try {
     const item = await request(`/opportunities/${encodeURIComponent(id)}`);
-    showModal(item.title, `<span class="card-tag">${escapeHtml(item.category.replaceAll("_", " "))}</span><p>${escapeHtml(item.description)}</p><h3>Documents</h3><ul>${item.documents.map((doc) => `<li>${escapeHtml(doc)}</li>`).join("") || "<li>Confirm on the official portal.</li>"}</ul>${item.official_url ? `<a class="button primary" href="${escapeHtml(item.official_url)}" target="_blank" rel="noreferrer">Open official source ↗</a>` : ""}`);
+    showModal(item.title, `<span class="card-tag">${escapeHtml(item.category.replaceAll("_", " "))}</span><p>${escapeHtml(item.description)}</p><h3>Documents</h3><ul>${item.documents.map((doc) => `<li>${escapeHtml(doc)}</li>`).join("") || "<li>Confirm on the official portal.</li>"}</ul>${item.official_url ? `<a class="button primary" href="${escapeHtml(item.official_url)}" target="_blank" rel="noreferrer">Open official source â†—</a>` : ""}`);
   } catch (problem) { showToast(problem.message); }
 }
 
 function topicMarkup(item) {
-  return `<article class="topic-card"><span class="card-tag">Health awareness</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.summary)}</p><div class="card-footer"><span></span><button class="text-link detail-button" data-topic="${escapeHtml(item.id)}">Read topic →</button></div></article>`;
+  return `<article class="topic-card"><span class="card-tag">Health awareness</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.summary)}</p><div class="card-footer"><span></span><button class="text-link detail-button" data-topic="${escapeHtml(item.id)}">Read topic â†’</button></div></article>`;
 }
 
 async function loadTopics(query = "") {
@@ -160,7 +221,7 @@ function showModal(title, body) {
   document.querySelector(".modal-backdrop")?.remove();
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
-  backdrop.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close" aria-label="Close">×</button><h2 id="modal-title">${escapeHtml(title)}</h2><div>${body}</div></div>`;
+  backdrop.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close" aria-label="Close">Ã—</button><h2 id="modal-title">${escapeHtml(title)}</h2><div>${body}</div></div>`;
   document.body.appendChild(backdrop);
   backdrop.addEventListener("click", (event) => { if (event.target === backdrop || event.target.closest(".modal-close")) backdrop.remove(); });
 }
@@ -182,7 +243,7 @@ async function sendChatMessage(text) {
   $("#chat-input").value = "";
   const pending = document.createElement("div");
   pending.className = "chat-message assistant pending";
-  pending.textContent = "Thinking…";
+  pending.textContent = "Thinkingâ€¦";
   $("#chat-messages").appendChild(pending);
   try {
     const result = await request("/chat", {
@@ -231,7 +292,7 @@ async function generatePlan() {
   try {
     lastProfile ||= profileFromForm();
     area.hidden = false;
-    setLoading(area, "Building your action plan…");
+    setLoading(area, "Building your action planâ€¦");
     const format = $("#plan-format").value;
     const result = await request(`/plan?format=${format}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(lastProfile),
@@ -239,7 +300,7 @@ async function generatePlan() {
     if (format === "markdown") {
       area.innerHTML = `<pre class="markdown-output">${escapeHtml(result)}</pre>`;
     } else {
-      area.innerHTML = `<div class="result-card"><h2>Checklist</h2><ul class="checklist">${result.checklist.map((item) => `<li><input type="checkbox" aria-label="${escapeHtml(item.text)}"><span>${escapeHtml(item.text)}</span></li>`).join("")}</ul>${result.documents.length ? `<h3>Documents to gather</h3><p>${escapeHtml(result.documents.join(" • "))}</p>` : ""}${result.links.length ? `<h3>Official links</h3><div class="link-list">${result.links.map((link) => `<a href="${escapeHtml(link.url || "#")}" target="_blank" rel="noreferrer">${escapeHtml(link.title || link.url || "Open link")} ↗</a>`).join("")}</div>` : ""}${result.warnings.map((warning) => `<div class="notice">${escapeHtml(warning)}</div>`).join("")}</div>`;
+      area.innerHTML = `<div class="result-card"><h2>Checklist</h2><ul class="checklist">${result.checklist.map((item) => `<li><input type="checkbox" aria-label="${escapeHtml(item.text)}"><span>${escapeHtml(item.text)}</span></li>`).join("")}</ul>${result.documents.length ? `<h3>Documents to gather</h3><p>${escapeHtml(result.documents.join(" â€¢ "))}</p>` : ""}${result.links.length ? `<h3>Official links</h3><div class="link-list">${result.links.map((link) => `<a href="${escapeHtml(link.url || "#")}" target="_blank" rel="noreferrer">${escapeHtml(link.title || link.url || "Open link")} â†—</a>`).join("")}</div>` : ""}${result.warnings.map((warning) => `<div class="notice">${escapeHtml(warning)}</div>`).join("")}</div>`;
     }
 
     showToast("Your action plan is ready.");
@@ -265,6 +326,18 @@ async function loadDashboard() {
 }
 
 function init() {
+  $("#auth-button").addEventListener("click", async () => {
+    if (!accessToken) return openAuth();
+    await request("/auth/logout", { method: "POST" });
+    accessToken = null;
+    localStorage.removeItem("nextstep_access_token");
+    updateAuthButton(null);
+    showToast("You have been signed out.");
+  });
+  $("#auth-close").addEventListener("click", closeAuth);
+  $("#auth-switch").addEventListener("click", () => openAuth(authMode === "login" ? "register" : "login"));
+  $("#auth-form").addEventListener("submit", submitAuth);
+  initializeAuth();
   $$(".main-nav a").forEach((link) => link.addEventListener("click", () => navigate(link.dataset.view)));
   $$("[data-go]").forEach((button) => button.addEventListener("click", () => navigate(button.dataset.go)));
   $("#profile-form").addEventListener("submit", checkEligibility);
