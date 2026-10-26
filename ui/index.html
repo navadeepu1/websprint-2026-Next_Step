@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="NextStep inclusive citizen opportunity discovery">
+  <title>NextStep | Citizen opportunity discovery</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#dashboard" aria-label="NextStep home">
+        <span class="brand-mark">N</span>
+        <span><strong>NextStep</strong><small>Opportunity discovery</small></span>
+      </a>
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a href="#dashboard" data-view="dashboard">Overview</a>
+        <a href="#eligibility" data-view="eligibility">Check eligibility</a>
+        <a href="#opportunities" data-view="opportunities">Opportunities</a>
+        <a href="#health-topics" data-view="health-topics">Health topics</a>
+        <a href="#plan" data-view="plan">My action plan</a>
+      </nav>
+      <span class="api-pill"><i></i><span id="api-status">Checking API</span></span>
+    </header>
+
+    <main>
+      <section id="dashboard" class="view active" aria-labelledby="dashboard-title">
+        <div class="hero">
+          <div>
+            <p class="eyebrow">A clearer path forward</p>
+            <h1 id="dashboard-title">Find support that fits your next step.</h1>
+            <p class="hero-copy">Answer a few questions to discover opportunities, understand what is uncertain, and turn your results into an actionable checklist.</p>
+            <div class="hero-actions">
+              <button class="button primary" data-go="eligibility">Start an eligibility check <span>→</span></button>
+              <button class="button secondary" data-go="opportunities">Browse opportunities</button>
+            </div>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+            <div class="hero-card"><span class="check">✓</span><strong>Possibly eligible</strong><small>Next step: gather documents</small></div>
+          </div>
+        </div>
+        <div class="stat-grid" id="dashboard-stats">
+          <div class="stat-card"><span class="stat-icon teal">⌁</span><div><strong id="stat-opportunities">—</strong><span>opportunities available</span></div></div>
+          <div class="stat-card"><span class="stat-icon amber">✦</span><div><strong id="stat-topics">—</strong><span>health topics</span></div></div>
+          <div class="stat-card"><span class="stat-icon blue">✓</span><div><strong id="stat-status">—</strong><span>service status</span></div></div>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">How it works</p><h2>Small answers, useful next steps.</h2></div></div>
+        <div class="feature-grid">
+          <article class="feature-card"><span class="feature-number">01</span><h3>Tell us about you</h3><p>Share only the basics. No ID numbers or sensitive documents are needed.</p></article>
+          <article class="feature-card"><span class="feature-number">02</span><h3>See what may fit</h3><p>Every result explains why it matches and calls out answers that are still unknown.</p></article>
+          <article class="feature-card"><span class="feature-number">03</span><h3>Know what to do next</h3><p>Generate a practical plan with documents, links, and a simple checklist.</p></article>
+        </div>
+      </section>
+
+      <section id="eligibility" class="view" aria-labelledby="eligibility-title">
+        <div class="page-heading"><div><p class="eyebrow">Personalised discovery</p><h1 id="eligibility-title">Check your eligibility</h1><p>Use a profile to evaluate every relevant opportunity. Unknown answers never become an automatic rejection.</p></div></div>
+        <div class="workspace-grid">
+          <form id="profile-form" class="panel profile-panel">
+            <div class="panel-heading"><div><h2>Your profile</h2><p>Fields marked <b>*</b> are required.</p></div><span class="step-badge">1 of 1</span></div>
+            <div class="form-grid">
+              <label>Age <b>*</b><input name="age" type="number" min="0" max="120" value="25" required></label>
+              <label>Annual income (₹) <b>*</b><input name="annual_income" type="number" min="0" max="100000000" value="0" required></label>
+              <label>Education <b>*</b><select name="education_level" required><option value="none">None</option><option value="primary">Primary</option><option value="secondary">Secondary</option><option value="12th">12th</option><option value="diploma">Diploma</option><option value="undergraduate" selected>Undergraduate</option><option value="postgraduate">Postgraduate</option><option value="other">Other</option></select></label>
+              <label>Occupation <b>*</b><select name="occupation" required><option value="student">Student</option><option value="employed">Employed</option><option value="unemployed" selected>Unemployed</option><option value="self_employed">Self-employed</option><option value="farmer">Farmer</option><option value="retired">Retired</option><option value="homemaker">Homemaker</option><option value="other">Other</option></select></label>
+              <label>State / region <b>*</b><input name="state" value="PB" maxlength="10" required><small>Use a configured code, for example PB or ALL.</small></label>
+              <fieldset><legend>What do you need? <b>*</b></legend><div class="check-grid"><label class="check-label"><input type="checkbox" name="need" value="study"> Study</label><label class="check-label"><input type="checkbox" name="need" value="work" checked> Work</label><label class="check-label"><input type="checkbox" name="need" value="health"> Health</label><label class="check-label"><input type="checkbox" name="need" value="farming"> Farming</label><label class="check-label"><input type="checkbox" name="need" value="retirement_support"> Retirement support</label></div></fieldset>
+              <label>Land ownership<select name="has_land"><option value="">Not sure / prefer not to say</option><option value="true">Yes</option><option value="false">No</option></select></label>
+              <label>Disability status<select name="has_disability"><option value="">Not sure / prefer not to say</option><option value="true">Yes</option><option value="false">No</option></select></label>
+            </div>
+            <div id="profile-error" class="inline-error" role="alert" hidden></div>
+            <button class="button primary full" type="submit">Check opportunities <span>→</span></button>
+          </form>
+          <div class="panel guidance-panel"><span class="guidance-icon">✦</span><h2>A fairer answer</h2><p>Eligibility is a guide, not a final decision. When a detail is missing, NextStep shows “possibly eligible” so you know what to verify on the official portal.</p><div class="trust-row"><span>🔒</span><span>Your profile stays in this browser session.</span></div></div>
+        </div>
+        <div id="eligibility-results" class="results-area" hidden></div>
+      </section>
+
+      <section id="opportunities" class="view" aria-labelledby="opportunities-title">
+        <div class="page-heading"><div><p class="eyebrow">Explore the catalogue</p><h1 id="opportunities-title">Opportunities</h1><p>Browse active records and open the official source for application details.</p></div></div>
+        <div class="toolbar panel"><label>Category<select id="opportunity-category"><option value="">All categories</option><option value="scholarship">Scholarship</option><option value="job">Jobs</option><option value="farmer_scheme">Farmer schemes</option><option value="senior_support">Senior support</option></select></label><label>Verification<select id="opportunity-verified"><option value="">Any status</option><option value="true">Verified only</option><option value="false">Unverified</option></select></label><button class="button primary" id="load-opportunities">Refresh catalogue</button></div>
+        <div id="opportunity-list" class="card-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="health-topics" class="view" aria-labelledby="health-title">
+        <div class="page-heading"><div><p class="eyebrow">Health awareness</p><h1 id="health-title">Health topics</h1><p>General awareness information from the curated catalogue. This does not replace medical advice.</p></div></div>
+        <div class="searchbar panel"><label for="topic-search">Search topics</label><div class="search-row"><input id="topic-search" placeholder="Try heat, nutrition, or stress" minlength="2"><button class="button primary" id="search-topics">Search</button><button class="button ghost" id="load-topics">Show all</button></div></div>
+        <div id="topic-list" class="card-grid" aria-live="polite"></div>
+        <div id="health-disclaimer" class="notice" hidden></div>
+      </section>
+
+      <section id="plan" class="view" aria-labelledby="plan-title">
+        <div class="page-heading"><div><p class="eyebrow">Turn results into momentum</p><h1 id="plan-title">My action plan</h1><p>Use the same profile to create a checklist, document list, and official links.</p></div></div>
+        <div class="workspace-grid"><div class="panel plan-intro"><h2>Ready for a practical plan?</h2><p>Generate JSON for the app view or Markdown for sharing and printing. The plan reflects the current profile and catalogue.</p><button class="button primary" data-go="eligibility">Edit profile first <span>→</span></button></div><div class="panel format-panel"><label>Output format<select id="plan-format"><option value="json">Interactive checklist (JSON)</option><option value="markdown">Printable Markdown</option></select></label><button class="button secondary full" id="generate-plan">Generate my plan</button></div></div>
+        <div id="plan-results" class="results-area" hidden></div>
+      </section>
+    </main>
+    <footer><span>NextStep</span><span>Offline-first • Informational only</span><a href="/docs" target="_blank" rel="noreferrer">API documentation</a></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

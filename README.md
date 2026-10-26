@@ -37,6 +37,20 @@ copy .env.example .env
 
 Application startup and API commands will be added in later milestones.
 
+### Test UI
+
+The browser test UI is served by the same FastAPI application. After installing
+the dependencies, start the server and open `http://127.0.0.1:8000/`:
+
+```text
+uvicorn app.main:app --reload
+```
+
+The UI covers the health status check, opportunity catalogue filters and
+details, health-topic search and details, eligibility evaluation, and action
+plan generation in JSON or Markdown. It uses the API at `/api/v1` and does not
+require a separate frontend build step.
+
 ## API Reference
 
 _To be completed in later milestones._ Base path: `/api/v1`.

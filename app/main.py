@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.database import Base, make_engine, make_session_factory
@@ -18,7 +19,10 @@ def _apply_security_headers(app: FastAPI) -> None:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
-        response.headers["Content-Security-Policy"] = "default-src 'none'"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; connect-src 'self'; img-src 'self' data:; "
+            "style-src 'self'; script-src 'self'; font-src 'self'"
+        )
         return response
 
 
@@ -62,6 +66,8 @@ def create_app() -> FastAPI:
     application.include_router(eligibility.router, prefix="/api/v1")
     application.include_router(plan.router, prefix="/api/v1")
     Path("data").mkdir(exist_ok=True)
+    ui_directory = Path(__file__).resolve().parent.parent / "ui"
+    application.mount("/", StaticFiles(directory=ui_directory, html=True), name="ui")
     return application
 
 
