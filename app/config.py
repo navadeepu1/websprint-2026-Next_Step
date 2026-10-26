@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     allowed_states: str = "PB,ALL"
     rate_limit_per_minute: int = Field(default=60, ge=1)
     request_body_limit_bytes: int = Field(default=32768, ge=1024)
+    sync_timeout_seconds: float = Field(default=15.0, gt=0, le=120)
+    audit_log_retention_days: int = Field(default=365, ge=1)
 
     @field_validator("ai_provider")
     @classmethod

@@ -58,6 +58,25 @@ details, health-topic search and details, eligibility evaluation, and action
 plan generation in JSON or Markdown. It uses the API at `/api/v1` and does not
 require a separate frontend build step.
 
+### Production-readiness controls
+
+- Configure `DATA_SOURCE_URLS` with comma-separated JSON catalogue URLs and
+  call `POST /api/v1/admin/sync` with `X-Admin-Api-Key` to validate and upsert
+  records. Payloads may be an opportunity array or an object containing
+  `opportunities` and `health_topics`.
+- Set `SYNC_ON_START=true` to run configured syncs during startup. Every run
+  writes a `SyncLog` record and the health endpoint reports its status.
+- Set `AI_PROVIDER=noop` (the default) for deterministic explanations. Set
+  `AI_PROVIDER=gemini` or `groq` with the corresponding key to enable optional
+  cached rewriting; provider failures always fall back to templates.
+- Set `ADMIN_API_KEY` before using admin content routes. Admin writes and sync
+  actions create `AuditLog` records.
+- `RATE_LIMIT_PER_MINUTE` and `REQUEST_BODY_LIMIT_BYTES` protect the API with
+  `429` and `413` responses respectively.
+
+See [docs/CATALOGUE_VERIFICATION.md](docs/CATALOGUE_VERIFICATION.md) for the
+manual review required before marking catalogue records verified.
+
 ## API Reference
 
 Base path: `/api/v1`.
@@ -116,9 +135,13 @@ Completed:
 
 Remaining roadmap:
 
-- Implement configured live-data synchronization and `SyncLog` updates.
+- Harden live-data synchronization with scheduled jobs, source-specific
+  adapters, and operational retry/alerting.
 - Manually verify catalogue rules, documents, URLs, and freshness dates.
-- Add optional AI provider adapters with caching and deterministic fallback.
-- Add authenticated admin/content-management workflows.
-- Add rate limiting, audit logging, and production deployment hardening.
+- Extend the optional AI adapters with provider health metrics and configurable
+  cache expiry.
+- Extend authenticated admin/content-management workflows with review queues
+  and role-based permissions.
+- Move rate limiting and audit storage to shared production infrastructure and
+  complete deployment hardening.
 - Add browser end-to-end and automated accessibility coverage.

@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.schemas.profile import ProfileIn
 from app.services.explainer import template_explanation
+from app.services.ai import explain
 from app.services.matching import evaluate_profile, profile_from_schema
 from app.services.plan import build_plan, plan_to_markdown
 
@@ -20,7 +21,13 @@ def create_plan(
         results = evaluate_profile(session, payload)
         profile = profile_from_schema(payload)
         explanation = template_explanation(profile, results)
-        plan = build_plan(profile, results, explanation, "template")
+        explanation, explanation_source = explain(
+            "Rewrite this action-plan explanation in plain, respectful language. "
+            "Do not add facts or guarantees:\n" + explanation,
+            explanation,
+            session,
+        )
+        plan = build_plan(profile, results, explanation, explanation_source)
         if format == "markdown":
             return PlainTextResponse(plan_to_markdown(plan), media_type="text/markdown")
         return JSONResponse(content=plan.model_dump())
