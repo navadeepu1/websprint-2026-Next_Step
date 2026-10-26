@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="NextStep inclusive citizen opportunity discovery">
   <title>NextStep | Citizen opportunity discovery</title>
-  <link rel="stylesheet" href="/styles.css?v=3">
+  <link rel="stylesheet" href="/styles.css?v=4">
 </head>
 <body>
   <div class="app-shell">
@@ -65,7 +65,44 @@
               <label>Annual income (₹) <b>*</b><input name="annual_income" type="number" min="0" max="100000000" value="0" required></label>
               <label>Education <b>*</b><select name="education_level" required><option value="none">None</option><option value="primary">Primary</option><option value="secondary">Secondary</option><option value="12th">12th</option><option value="diploma">Diploma</option><option value="undergraduate" selected>Undergraduate</option><option value="postgraduate">Postgraduate</option><option value="other">Other</option></select></label>
               <label>Occupation <b>*</b><select name="occupation" required><option value="student">Student</option><option value="employed">Employed</option><option value="unemployed" selected>Unemployed</option><option value="self_employed">Self-employed</option><option value="farmer">Farmer</option><option value="retired">Retired</option><option value="homemaker">Homemaker</option><option value="other">Other</option></select></label>
-              <label>State / region <b>*</b><input name="state" value="PB" maxlength="10" required><small>Use a configured code, for example PB or ALL.</small></label>
+              <label>State / union territory <b>*</b><select name="state" required>
+                <option value="AP">Andhra Pradesh</option>
+                <option value="AR">Arunachal Pradesh</option>
+                <option value="AS">Assam</option>
+                <option value="BR">Bihar</option>
+                <option value="CG">Chhattisgarh</option>
+                <option value="GA">Goa</option>
+                <option value="GJ">Gujarat</option>
+                <option value="HR">Haryana</option>
+                <option value="HP">Himachal Pradesh</option>
+                <option value="JH">Jharkhand</option>
+                <option value="KA">Karnataka</option>
+                <option value="KL">Kerala</option>
+                <option value="MP">Madhya Pradesh</option>
+                <option value="MH">Maharashtra</option>
+                <option value="MN">Manipur</option>
+                <option value="ML">Meghalaya</option>
+                <option value="MZ">Mizoram</option>
+                <option value="NL">Nagaland</option>
+                <option value="OD">Odisha</option>
+                <option value="PB" selected>Punjab</option>
+                <option value="RJ">Rajasthan</option>
+                <option value="SK">Sikkim</option>
+                <option value="TN">Tamil Nadu</option>
+                <option value="TS">Telangana</option>
+                <option value="TR">Tripura</option>
+                <option value="UP">Uttar Pradesh</option>
+                <option value="UK">Uttarakhand</option>
+                <option value="WB">West Bengal</option>
+                <option value="AN">Andaman and Nicobar Islands</option>
+                <option value="CH">Chandigarh</option>
+                <option value="DN">Dadra and Nagar Haveli and Daman and Diu</option>
+                <option value="DL">Delhi</option>
+                <option value="JK">Jammu and Kashmir</option>
+                <option value="LA">Ladakh</option>
+                <option value="LD">Lakshadweep</option>
+                <option value="PY">Puducherry</option>
+              </select><small>Your selection is sent as the official two-letter region code.</small></label>
               <fieldset><legend>What do you need? <b>*</b></legend><div class="check-grid"><label class="check-label"><input type="checkbox" name="need" value="study"> Study</label><label class="check-label"><input type="checkbox" name="need" value="work" checked> Work</label><label class="check-label"><input type="checkbox" name="need" value="health"> Health</label><label class="check-label"><input type="checkbox" name="need" value="farming"> Farming</label><label class="check-label"><input type="checkbox" name="need" value="retirement_support"> Retirement support</label></div></fieldset>
               <label>Land ownership<select name="has_land"><option value="">Not sure / prefer not to say</option><option value="true">Yes</option><option value="false">No</option></select></label>
               <label>Disability status<select name="has_disability"><option value="">Not sure / prefer not to say</option><option value="true">Yes</option><option value="false">No</option></select></label>
@@ -118,18 +155,18 @@
         <span class="chat-spark">✦</span><span>Ask NextStep</span>
       </button>
       <section class="chat-panel" id="chat-panel" hidden aria-labelledby="chat-title">
-        <div class="chat-header"><div><strong id="chat-title">NextStep Guide</strong><small>Ask how to use this website</small></div><button class="chat-close" id="chat-close" aria-label="Close chatbot">×</button></div>
+        <div class="chat-header"><div><strong id="chat-title">NextStep Guide</strong><small>Ask anything — website help or general questions</small></div><button class="chat-close" id="chat-close" aria-label="Close chatbot">×</button></div>
         <div class="chat-messages" id="chat-messages" aria-live="polite">
           <div class="chat-message assistant">Hi! I can show you where to find eligibility checks, opportunities, health topics, action plans, and API documentation.</div>
         </div>
-        <div class="chat-suggestions" id="chat-suggestions"><button type="button">How do I check eligibility?</button><button type="button">Where are official links?</button><button type="button">How does this website work?</button></div>
-        <form class="chat-form" id="chat-form"><label class="sr-only" for="chat-input">Ask NextStep Guide</label><input id="chat-input" maxlength="1200" autocomplete="off" placeholder="Ask a question…" required><button class="button primary" type="submit" aria-label="Send message">↑</button></form>
-        <small class="chat-disclaimer">AI can explain the website. Always verify programme details on official portals.</small>
+        <div class="chat-suggestions" id="chat-suggestions"><button type="button">How do I check eligibility?</button><button type="button">Explain this in simple words</button><button type="button">What can you help me with?</button></div>
+        <form class="chat-form" id="chat-form"><label class="sr-only" for="chat-input">Ask NextStep Guide</label><input id="chat-input" maxlength="1200" autocomplete="off" placeholder="Ask anything…" required><button class="button primary" type="submit" aria-label="Send message">↑</button></form>
+        <small class="chat-disclaimer">AI responses can be imperfect. Verify important information with trusted or official sources.</small>
       </section>
     </aside>
     <footer><span>NextStep</span><span>Offline-first • Informational only</span><a href="/docs" target="_blank" rel="noreferrer">API documentation</a></footer>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="/app.js?v=3"></script>
+  <script src="/app.js?v=4"></script>
 </body>
 </html>

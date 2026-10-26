@@ -13,6 +13,19 @@ NextStep helps a person answer:
 NextStep is an informational helper. It does not replace an official
 government portal, an application decision, or medical advice.
 
+## Default demo login credentials
+
+The local development database seeds these accounts automatically on startup:
+
+| Account | Email | Password |
+|---|---|---|
+| Demo Citizen | `demo@nextstep.local` | `Demo@12345` |
+| Student Demo | `student@nextstep.local` | `Student@12345` |
+
+Use the **Sign in** button in the header. The **Name** field is only shown
+when switching to account registration. These credentials are for local
+testing only; change or remove them before any production deployment.
+
 ## What this project does
 
 NextStep accepts a small profile without identity numbers:
@@ -293,7 +306,7 @@ are:
 | `AI_CACHE_TTL_SECONDS` | `86400` | Successful AI-cache lifetime; `0` never expires |
 | `SYNC_ON_START` | `false` | Sync configured sources at startup |
 | `DATA_SOURCE_URLS` | empty | Comma-separated JSON catalogue URLs |
-| `ALLOWED_STATES` | `PB,ALL` | Accepted profile state codes |
+| `ALLOWED_STATES` | All Indian state/UT codes plus `ALL` | Accepted profile state codes; override to restrict a deployment |
 | `RATE_LIMIT_PER_MINUTE` | `60` | Per-client in-memory request limit |
 | `REQUEST_BODY_LIMIT_BYTES` | `32768` | Maximum request body size |
 | `SYNC_TIMEOUT_SECONDS` | `15` | Live-source request timeout |
@@ -430,10 +443,13 @@ Both endpoints accept the same profile body as the eligibility endpoint.
 ### Website chatbot
 
 The browser UI includes an **Ask NextStep** chatbot in the lower-right corner.
-It explains how to use this website, where to find eligibility checks,
-opportunities, health topics, action plans, API documentation, and official
-catalogue links. It is not a replacement for the eligibility endpoint or an
-official application decision.
+It accepts free-text questions, not just the suggested prompts. With Groq
+configured, it can answer general questions, explain concepts, help draft or
+rewrite text, and explain how to use this website. For NextStep questions it
+can describe eligibility checks, opportunities, health topics, action plans,
+API documentation, and official catalogue links. It is not a replacement for
+the eligibility endpoint, professional advice, or an official application
+decision.
 
 The API endpoint is:
 

@@ -92,10 +92,12 @@ POST /api/v1/plan
 POST /api/v1/plan?format=markdown
 ```
 
-The browser UI also includes an **Ask NextStep** chatbot. It uses Groq to
-answer general questions about this website, such as where to find an
-eligibility check, how to browse opportunity records, where official links
-appear, and how to open the API docs:
+The browser UI also includes an **Ask NextStep** chatbot. It accepts any
+free-text question and uses Groq for general conversation, explanations,
+brainstorming, short drafting or rewriting tasks, and questions about the
+website. For example, it can explain where to find an eligibility check, how
+to browse opportunity records, where official links appear, or how to open
+the API docs:
 
 ```text
 POST /api/v1/chat
@@ -124,10 +126,11 @@ Example response:
 ```
 
 The server limits each message to 1,200 characters and keeps at most eight
-recent messages. It supplies fixed NextStep website context to Groq, so the
-chatbot is focused on navigating this application. If Groq is not configured
-or unavailable, common website questions use a deterministic built-in guide
-and return `"source": "template"`.
+recent messages. It supplies fixed NextStep website context to Groq without
+restricting the user to predefined options. If Groq is not configured or
+unavailable, common website questions use a deterministic built-in guide and
+return `"source": "template"`; general open-ended questions require Groq to
+be configured.
 
 The request body is the normal NextStep profile. Example:
 

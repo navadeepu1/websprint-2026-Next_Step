@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     ai_cache_ttl_seconds: int = Field(default=86400, ge=0, le=2_592_000)
     sync_on_start: bool = False
     data_source_urls: str = ""
-    allowed_states: str = "PB,ALL"
+    allowed_states: str = "AP,AR,AS,BR,CG,GA,GJ,HR,HP,JH,KA,KL,MP,MH,MN,ML,MZ,NL,OD,PB,RJ,SK,TN,TS,TR,UP,UK,WB,AN,CH,DN,DL,JK,LA,LD,PY,ALL"
     rate_limit_per_minute: int = Field(default=60, ge=1)
     request_body_limit_bytes: int = Field(default=32768, ge=1024)
     sync_timeout_seconds: float = Field(default=15.0, gt=0, le=120)
