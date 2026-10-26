@@ -1,0 +1,131 @@
+[
+  {
+    "id": "senior-health-checkups",
+    "title": "Routine health checkups for senior citizens",
+    "summary": "Regular checkups help older adults notice blood pressure, blood sugar, vision, hearing, and mobility changes early. Ask a qualified clinician which tests are suitable. This is general awareness, not a diagnosis.",
+    "warning_signs": [
+      "Sudden weakness on one side of the body",
+      "Chest pain or pressure",
+      "New confusion or fainting"
+    ],
+    "when_to_seek_help": [
+      "Book a clinic visit for routine screening as advised by a doctor",
+      "Seek urgent care for chest pain, trouble breathing, or loss of consciousness"
+    ],
+    "source_url": "https://www.mohfw.gov.in/",
+    "last_verified": null
+  },
+  {
+    "id": "heat-hydration-farmers",
+    "title": "Heat and hydration for farmers",
+    "summary": "Farm work in high heat raises the risk of heat exhaustion. Rest in shade, drink water often, and avoid the hottest hours when possible. Do not use unprescribed medicines or salt tablets without medical advice.",
+    "warning_signs": [
+      "Dizziness, heavy sweating, or nausea while working in heat",
+      "Confusion or fainting",
+      "Very hot, dry skin"
+    ],
+    "when_to_seek_help": [
+      "Move to a cooler place and sip water if you feel unwell in the heat",
+      "Call local emergency services if someone becomes unconscious or stops sweating and feels extremely hot"
+    ],
+    "source_url": "https://www.who.int/news-room/fact-sheets/detail/climate-change-heat-and-health",
+    "last_verified": null
+  },
+  {
+    "id": "eye-care-students",
+    "title": "Eye care for students",
+    "summary": "Long reading and screen time can strain the eyes. Use good lighting, take short breaks, and get vision checked if you squint, have headaches, or cannot see the board clearly. An eye-care professional should decide any treatment.",
+    "warning_signs": [
+      "Sudden loss of vision",
+      "Severe eye pain",
+      "Seeing flashes of light or many new floaters"
+    ],
+    "when_to_seek_help": [
+      "Visit an optometrist or ophthalmologist for blurred vision that does not settle with rest",
+      "Seek urgent care for sudden vision loss or severe eye pain"
+    ],
+    "source_url": "https://npcbvi.gov.in/",
+    "last_verified": null
+  },
+  {
+    "id": "when-to-seek-urgent-help",
+    "title": "When to seek urgent help",
+    "summary": "Some symptoms need emergency care at once. Do not wait for an app or a relative to decide. Call local emergency services if someone may be having a heart attack, stroke, severe breathing trouble, or is unconscious.",
+    "warning_signs": [
+      "Chest pain",
+      "Difficulty breathing",
+      "Unconsciousness",
+      "Sudden weakness, facial droop, or trouble speaking"
+    ],
+    "when_to_seek_help": [
+      "Call local emergency services immediately for severe symptoms",
+      "Stay with the person until trained help arrives"
+    ],
+    "source_url": "https://www.mohfw.gov.in/",
+    "last_verified": null
+  },
+  {
+    "id": "monsoon-water-hygiene",
+    "title": "Safe water and monsoon hygiene",
+    "summary": "Flooded or unclean water can spread stomach infections. Use safe drinking water, wash hands with soap, and keep food covered. Seek care if vomiting, high fever, or severe diarrhoea occurs, especially in children and older adults.",
+    "warning_signs": [
+      "Blood in stool",
+      "Very little urine or extreme thirst",
+      "High fever with confusion"
+    ],
+    "when_to_seek_help": [
+      "See a clinician for persistent vomiting or diarrhoea",
+      "Seek urgent care for signs of severe dehydration"
+    ],
+    "source_url": "https://www.mohfw.gov.in/",
+    "last_verified": null
+  },
+  {
+    "id": "blood-pressure-awareness-seniors",
+    "title": "Blood pressure awareness for older adults",
+    "summary": "High blood pressure often has no obvious symptoms. Periodic measurement at a clinic or health centre can help a doctor decide next steps. Never start, stop, or change medicine based on this summary.",
+    "warning_signs": [
+      "Severe headache with vomiting",
+      "Chest pain",
+      "Sudden weakness or trouble speaking"
+    ],
+    "when_to_seek_help": [
+      "Ask a qualified clinician how often to check blood pressure",
+      "Call emergency services for chest pain, fainting, or stroke-like symptoms"
+    ],
+    "source_url": "https://www.mohfw.gov.in/",
+    "last_verified": null
+  },
+  {
+    "id": "hearing-balance-seniors",
+    "title": "Hearing and balance in later life",
+    "summary": "Hearing loss and unsteadiness are common as people age and can increase fall risk. A clinician can check hearing and balance. Home remedies and unprescribed drops are not a substitute for care.",
+    "warning_signs": [
+      "Sudden hearing loss",
+      "Repeated falls",
+      "Spinning vertigo with vomiting"
+    ],
+    "when_to_seek_help": [
+      "Ask a doctor or audiologist about a hearing check",
+      "Seek urgent care after a fall with head injury or sudden hearing loss"
+    ],
+    "source_url": "https://www.mohfw.gov.in/",
+    "last_verified": null
+  },
+  {
+    "id": "pesticide-safety-farmers",
+    "title": "Pesticide handling awareness for farmers",
+    "summary": "Follow label instructions from licensed products and wear recommended protection. Wash hands and clothes after spraying. This topic does not recommend any chemical or dose.",
+    "warning_signs": [
+      "Difficulty breathing after spraying",
+      "Vomiting, seizures, or collapse",
+      "Burns on skin from chemical contact"
+    ],
+    "when_to_seek_help": [
+      "Move to fresh air and remove contaminated clothing if exposure occurs",
+      "Call local emergency services for breathing trouble, seizures, or unconsciousness"
+    ],
+    "source_url": "https://agricoop.gov.in/",
+    "last_verified": null
+  }
+]
