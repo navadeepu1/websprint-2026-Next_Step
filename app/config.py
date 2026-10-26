@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     ai_provider: str = "noop"
     gemini_api_key: str = ""
     groq_api_key: str = ""
+    groq_model: str = "llama-3.1-8b-instant"
+    ai_timeout_seconds: float = Field(default=15.0, gt=0, le=120)
+    ai_max_tokens: int = Field(default=300, ge=32, le=2000)
+    ai_temperature: float = Field(default=0.0, ge=0, le=2)
+    ai_cache_ttl_seconds: int = Field(default=86400, ge=0, le=2_592_000)
     sync_on_start: bool = False
     data_source_urls: str = ""
     allowed_states: str = "PB,ALL"

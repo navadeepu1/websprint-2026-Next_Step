@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models import SyncLog
 from app.schemas.common import HealthStatusOut
+from app.services.ai import provider_status
 
 router = APIRouter()
 
@@ -28,10 +29,13 @@ def health(request: Request) -> HealthStatusOut:
     finally:
         session.close()
     overall = "ok" if database == "ok" else "degraded"
+    ai = provider_status()
     return HealthStatusOut(
         status=overall,
         database=database,
         last_successful_sync=last_successful,
         ai_provider=request.app.state.settings.ai_provider,
+        ai_configured=bool(ai["configured"]),
+        ai_model=str(ai["model"]),
         sync=sync_status,
     )

@@ -192,7 +192,9 @@ async function loadDashboard() {
     $("#stat-opportunities").textContent = opportunities.length;
     $("#stat-topics").textContent = topics.length;
     $("#stat-status").textContent = health.status === "ok" ? "Online" : "Degraded";
-    $("#api-status").textContent = health.status === "ok" ? "API online" : "API degraded";
+    $("#api-status").textContent = health.status === "ok"
+      ? (health.ai_provider === "groq" && health.ai_configured ? "API + Groq online" : "API online")
+      : "API degraded";
     $(".api-pill").classList.toggle("ok", health.status === "ok");
   } catch (_) {
     $("#api-status").textContent = "API unavailable";

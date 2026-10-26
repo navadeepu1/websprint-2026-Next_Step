@@ -80,3 +80,34 @@ def test_ai_falls_back_to_template_without_provider_key(monkeypatch: pytest.Monk
 
     assert explain("prompt", "fallback", Session()) == ("fallback", "template")
     get_settings.cache_clear()
+
+
+def test_groq_explanation_uses_bearer_auth_and_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{(tmp_path / 'groq.db').as_posix()}")
+    monkeypatch.setenv("AI_PROVIDER", "groq")
+    monkeypatch.setenv("GROQ_API_KEY", "test-groq-key")
+    monkeypatch.setenv("GROQ_MODEL", "test-model")
+    get_settings.cache_clear()
+    engine = make_engine()
+    Base.metadata.create_all(engine)
+    factory = make_session_factory(engine)
+
+    with respx.mock:
+        route = respx.post("https://api.groq.com/openai/v1/chat/completions").mock(
+            return_value=httpx.Response(
+                200,
+                json={"choices": [{"message": {"content": "A clearer explanation."}}]},
+            )
+        )
+        from app.services.ai import explain
+
+        with factory() as session:
+            assert explain("prompt", "fallback", session) == ("A clearer explanation.", "ai")
+            assert explain("prompt", "fallback", session) == ("A clearer explanation.", "ai")
+        assert route.call_count == 1
+        assert route.calls[0].request.headers["Authorization"] == "Bearer test-groq-key"
+        request = route.calls[0].request
+        assert request.content and b'"model":"test-model"' in request.content
+
+    engine.dispose()
+    get_settings.cache_clear()

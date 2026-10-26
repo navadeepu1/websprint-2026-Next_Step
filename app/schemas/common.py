@@ -27,6 +27,8 @@ class HealthStatusOut(APIModel):
     database: str
     last_successful_sync: str | None
     ai_provider: str
+    ai_configured: bool
+    ai_model: str
     sync: str
 
 

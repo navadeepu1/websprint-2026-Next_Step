@@ -285,6 +285,11 @@ are:
 | `AI_PROVIDER` | `noop` | `noop`, `gemini`, or `groq` |
 | `GEMINI_API_KEY` | empty | Gemini API key |
 | `GROQ_API_KEY` | empty | Groq API key |
+| `GROQ_MODEL` | `llama-3.1-8b-instant` | Groq chat-completion model |
+| `AI_TIMEOUT_SECONDS` | `15` | AI request timeout |
+| `AI_MAX_TOKENS` | `300` | Maximum generated explanation length |
+| `AI_TEMPERATURE` | `0` | Generation randomness; `0` is deterministic |
+| `AI_CACHE_TTL_SECONDS` | `86400` | Successful AI-cache lifetime; `0` never expires |
 | `SYNC_ON_START` | `false` | Sync configured sources at startup |
 | `DATA_SOURCE_URLS` | empty | Comma-separated JSON catalogue URLs |
 | `ALLOWED_STATES` | `PB,ALL` | Accepted profile state codes |
@@ -510,7 +515,113 @@ For production, use a proper secret manager, HTTPS, role-based permissions,
 and a shared audit/rate-limit store rather than relying only on a single
 development API key and in-memory limiter.
 
-## Optional AI explanations
+## Groq AI explanation workflow
+
+For the complete setup and usage guide, see
+[docs/AI_USAGE.md](docs/AI_USAGE.md).
+
+The application always calculates eligibility with deterministic Python rules.
+Groq is used only after those rules finish, to rewrite an already-generated
+explanation in simpler, respectful language. Groq cannot add opportunities,
+change statuses, invent documents, or override a rule result.
+
+The workflow is:
+
+```text
+Profile request
+    -> deterministic eligibility engine
+    -> template explanation
+    -> optional Groq rewrite
+    -> response with explanation_source = "ai" or "template"
+```
+
+Groq is used in both:
+
+- `POST /api/v1/eligibility/check`
+- `POST /api/v1/plan`
+
+The health endpoint reports the active provider, selected model, and whether
+the provider key is configured:
+
+```text
+GET /api/v1/health
+```
+
+The response includes fields similar to:
+
+```json
+{
+  "ai_provider": "groq",
+  "ai_configured": true,
+  "ai_model": "llama-3.1-8b-instant"
+}
+```
+
+### Enable Groq locally
+
+Put the key in your local `.env` file only. Do not put it in `.env.example`,
+README files, source code, screenshots, or commits:
+
+```text
+AI_PROVIDER=groq
+GROQ_API_KEY=your-new-groq-key
+GROQ_MODEL=llama-3.1-8b-instant
+AI_TIMEOUT_SECONDS=15
+AI_MAX_TOKENS=300
+AI_TEMPERATURE=0
+AI_CACHE_TTL_SECONDS=86400
+```
+
+Restart Uvicorn after changing `.env` because settings are loaded when the
+application starts:
+
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Verify configuration without exposing the key:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/health |
+  Select-Object ai_provider, ai_configured, ai_model
+```
+
+If `ai_configured` is `false`, check that `AI_PROVIDER=groq` is present and
+that `GROQ_API_KEY` is set in the same environment used to launch Uvicorn.
+
+### Groq request behavior
+
+The application sends a request to Groq's OpenAI-compatible endpoint with:
+
+- `Authorization: Bearer <key>`
+- The configured `GROQ_MODEL`
+- A protected system instruction
+- The deterministic explanation as the user message
+- `AI_TEMPERATURE`
+- `AI_MAX_TOKENS`
+- `AI_TIMEOUT_SECONDS`
+
+Only the generated text is returned. The secret key is never included in an
+API response, database cache value, audit record, or application log.
+
+### Cache and fallback behavior
+
+Successful responses are stored in the `ai_cache` table using a SHA-256 key
+derived from the provider, model, and prompt. The API key itself is never part
+of the cache key. Repeated identical requests within
+`AI_CACHE_TTL_SECONDS` reuse the cached result and do not call Groq again.
+
+The deterministic template is returned when:
+
+- `AI_PROVIDER=noop`
+- `GROQ_API_KEY` is empty
+- Groq returns an HTTP error
+- The request times out
+- Groq returns malformed or empty content
+- The configured provider is unsupported
+
+In all fallback cases the API remains functional and returns
+`explanation_source: "template"`.
 
 The default provider is deterministic template output:
 
@@ -532,10 +643,8 @@ AI_PROVIDER=groq
 GROQ_API_KEY=your-key
 ```
 
-AI only rewrites an existing deterministic explanation. It is not used to
-decide eligibility. If the provider is unavailable, the key is missing, the
-response is invalid, or the request fails, the application returns the
-template explanation instead. Successful responses are cached in `ai_cache`.
+Never use a key that has been pasted into a public file or chat. Revoke
+exposed keys in the Groq console and create a replacement.
 
 ## Run the test suite
 
