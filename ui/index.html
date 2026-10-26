@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="NextStep inclusive citizen opportunity discovery">
   <title>NextStep | Citizen opportunity discovery</title>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=2">
 </head>
 <body>
   <div class="app-shell">
@@ -85,7 +85,7 @@
 
       <section id="health-topics" class="view" aria-labelledby="health-title">
         <div class="page-heading"><div><p class="eyebrow">Health awareness</p><h1 id="health-title">Health topics</h1><p>General awareness information from the curated catalogue. This does not replace medical advice.</p></div></div>
-        <div class="searchbar panel"><label for="topic-search">Search topics</label><div class="search-row"><input id="topic-search" placeholder="Try heat, nutrition, or stress" minlength="2"><button class="button primary" id="search-topics">Search</button><button class="button ghost" id="load-topics">Show all</button></div></div>
+        <form class="searchbar panel" id="topic-search-form"><label for="topic-search">Search topics</label><div class="search-row"><input id="topic-search" placeholder="Try heat, nutrition, or stress" minlength="2"><button class="button primary" id="search-topics" type="submit">Search</button><button class="button ghost" id="load-topics" type="button">Show all</button></div></form>
         <div id="topic-list" class="card-grid" aria-live="polite"></div>
         <div id="health-disclaimer" class="notice" hidden></div>
       </section>
@@ -113,6 +113,6 @@
     <footer><span>NextStep</span><span>Offline-first • Informational only</span><a href="/docs" target="_blank" rel="noreferrer">API documentation</a></footer>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="/app.js"></script>
+  <script src="/app.js?v=2"></script>
 </body>
 </html>

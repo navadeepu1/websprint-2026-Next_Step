@@ -165,6 +165,67 @@ function showModal(title, body) {
   backdrop.addEventListener("click", (event) => { if (event.target === backdrop || event.target.closest(".modal-close")) backdrop.remove(); });
 }
 
+function addChatMessage(role, text) {
+  const messages = $("#chat-messages");
+  const message = document.createElement("div");
+  message.className = `chat-message ${role}`;
+  message.textContent = text;
+  messages.appendChild(message);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function sendChatMessage(text) {
+  const message = text.trim();
+  if (!message) return;
+  addChatMessage("user", message);
+  chatHistory.push({ role: "user", content: message });
+  $("#chat-input").value = "";
+  const pending = document.createElement("div");
+  pending.className = "chat-message assistant pending";
+  pending.textContent = "Thinking…";
+  $("#chat-messages").appendChild(pending);
+  try {
+    const result = await request("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, history: chatHistory.slice(-8) }),
+    });
+    pending.remove();
+    addChatMessage("assistant", result.reply);
+    chatHistory.push({ role: "assistant", content: result.reply });
+  } catch (problem) {
+    pending.remove();
+    addChatMessage("assistant", `I couldn't answer right now. ${problem.message}`);
+  }
+}
+
+function initChatbot() {
+  const launcher = $("#chat-launcher");
+  const panel = $("#chat-panel");
+  let returnFocus = launcher;
+  const open = () => {
+    returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : launcher;
+    panel.hidden = false;
+    launcher.setAttribute("aria-expanded", "true");
+    $("#chat-input").focus();
+  };
+  const close = () => {
+    panel.hidden = true;
+    launcher.setAttribute("aria-expanded", "false");
+    returnFocus.focus();
+  };
+  launcher.addEventListener("click", () => (panel.hidden ? open() : close()));
+  $("#chat-close").addEventListener("click", close);
+  panel.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") close();
+  });
+  $("#chat-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    sendChatMessage($("#chat-input").value);
+  });
+  $$("#chat-suggestions button").forEach((button) => button.addEventListener("click", () => sendChatMessage(button.textContent)));
+}
+
 async function generatePlan() {
   const area = $("#plan-results");
   try {
@@ -181,60 +242,6 @@ async function generatePlan() {
       area.innerHTML = `<div class="result-card"><h2>Checklist</h2><ul class="checklist">${result.checklist.map((item) => `<li><input type="checkbox" aria-label="${escapeHtml(item.text)}"><span>${escapeHtml(item.text)}</span></li>`).join("")}</ul>${result.documents.length ? `<h3>Documents to gather</h3><p>${escapeHtml(result.documents.join(" • "))}</p>` : ""}${result.links.length ? `<h3>Official links</h3><div class="link-list">${result.links.map((link) => `<a href="${escapeHtml(link.url || "#")}" target="_blank" rel="noreferrer">${escapeHtml(link.title || link.url || "Open link")} ↗</a>`).join("")}</div>` : ""}${result.warnings.map((warning) => `<div class="notice">${escapeHtml(warning)}</div>`).join("")}</div>`;
     }
 
-    function addChatMessage(role, text) {
-      const messages = $("#chat-messages");
-      const message = document.createElement("div");
-      message.className = `chat-message ${role}`;
-      message.textContent = text;
-      messages.appendChild(message);
-      messages.scrollTop = messages.scrollHeight;
-    }
-
-    async function sendChatMessage(text) {
-      const message = text.trim();
-      if (!message) return;
-      addChatMessage("user", message);
-      chatHistory.push({ role: "user", content: message });
-      $("#chat-input").value = "";
-      const pending = document.createElement("div");
-      pending.className = "chat-message assistant pending";
-      pending.textContent = "Thinking…";
-      $("#chat-messages").appendChild(pending);
-      try {
-        const result = await request("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, history: chatHistory.slice(-8) }),
-        });
-        pending.remove();
-        addChatMessage("assistant", result.reply);
-        chatHistory.push({ role: "assistant", content: result.reply });
-      } catch (problem) {
-        pending.remove();
-        addChatMessage("assistant", `I couldn't answer right now. ${problem.message}`);
-      }
-    }
-
-    function initChatbot() {
-      const launcher = $("#chat-launcher");
-      const panel = $("#chat-panel");
-      const open = () => {
-        panel.hidden = false;
-        launcher.setAttribute("aria-expanded", "true");
-        $("#chat-input").focus();
-      };
-      const close = () => {
-        panel.hidden = true;
-        launcher.setAttribute("aria-expanded", "false");
-      };
-      launcher.addEventListener("click", () => (panel.hidden ? open() : close()));
-      $("#chat-close").addEventListener("click", close);
-      $("#chat-form").addEventListener("submit", (event) => {
-        event.preventDefault();
-        sendChatMessage($("#chat-input").value);
-      });
-      $$("#chat-suggestions button").forEach((button) => button.addEventListener("click", () => sendChatMessage(button.textContent)));
-    }
     showToast("Your action plan is ready.");
   } catch (problem) {
     area.hidden = false;
@@ -262,7 +269,10 @@ function init() {
   $$("[data-go]").forEach((button) => button.addEventListener("click", () => navigate(button.dataset.go)));
   $("#profile-form").addEventListener("submit", checkEligibility);
   $("#load-opportunities").addEventListener("click", loadOpportunities);
-  $("#search-topics").addEventListener("click", () => loadTopics($("#topic-search").value.trim()));
+  $("#topic-search-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    loadTopics($("#topic-search").value.trim());
+  });
   $("#load-topics").addEventListener("click", () => { $("#topic-search").value = ""; loadTopics(); });
   $("#generate-plan").addEventListener("click", generatePlan);
   initChatbot();
