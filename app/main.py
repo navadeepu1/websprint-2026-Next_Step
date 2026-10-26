@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import Base, make_engine, make_session_factory
 from app.errors import register_error_handlers
-from app.routers import health, health_topics, opportunities
+from app.routers import eligibility, health, health_topics, opportunities, plan
 from app.seed import database_is_empty, load_seed_data
 
 
@@ -59,6 +59,8 @@ def create_app() -> FastAPI:
     application.include_router(health.router, prefix="/api/v1")
     application.include_router(opportunities.router, prefix="/api/v1")
     application.include_router(health_topics.router, prefix="/api/v1")
+    application.include_router(eligibility.router, prefix="/api/v1")
+    application.include_router(plan.router, prefix="/api/v1")
     Path("data").mkdir(exist_ok=True)
     return application
 
