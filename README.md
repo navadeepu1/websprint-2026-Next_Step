@@ -1,147 +1,768 @@
 # NextStep
 
-Offline-first eligibility helper for scholarships, government skilling and jobs, farmer schemes, senior support, and health awareness. NextStep complements official portals such as myScheme and the National Scholarship Portal. It does not replace them.
+Offline-first citizen opportunity discovery for scholarships, jobs, farmer
+schemes, senior support, and health awareness.
 
-## Chosen Vertical
+NextStep helps a person answer:
 
-Inclusive Citizen Opportunity Discovery
+- What government or public opportunity may fit my situation?
+- Why did it match or not match?
+- Which answers are still unknown?
+- Which documents and official links should I check next?
 
-Track: AI and Intelligent Web for Good Ecosystem (AI-WEB ECOS)
+NextStep is an informational helper. It does not replace an official
+government portal, an application decision, or medical advice.
 
-## Problem Statement
+## What this project does
 
-People who need study support, work, farming help, retirement support, or health information must search many government portals. Eligibility rules are spread out, and a missed answer is often treated like a rejection. NextStep takes a short profile (no ID numbers) and returns what may apply, what is unclear, and what to do next.
+NextStep accepts a small profile without identity numbers:
 
-## Approach and Logic
+- Age
+- Education level
+- Occupation
+- Annual income
+- State or region
+- One or more needs
+- Optional land ownership
+- Optional disability status
 
-Eligibility is evaluated by deterministic rules. Optional AI is not required for
-the current workflow; explanations are generated from the rule results. Missing
-answers produce `POSSIBLY_ELIGIBLE`, never an automatic rejection.
+It evaluates the profile against locally stored opportunity criteria using
+deterministic rules. It returns:
 
-## How the Solution Works
+- `ELIGIBLE` opportunities
+- `POSSIBLY_ELIGIBLE` opportunities when an answer is missing
+- `NOT_ELIGIBLE` opportunities when a confirmed rule fails
+- Rule-by-rule reasons
+- Required documents
+- Official source links
+- A plain-language explanation
+- A practical action plan
 
-The application seeds a local SQLite database from `seed/`, accepts a minimal
-profile without identity numbers, evaluates matching opportunities, and returns
-explanations, documents, official links, and follow-up questions. Health topics
-are available as a separate awareness catalogue. The browser test UI is served
-by the same FastAPI process.
+The project also provides:
+
+- A searchable health-awareness catalogue
+- A responsive browser test UI
+- A FastAPI JSON API
+- SQLite persistence through SQLAlchemy
+- Local seed data for offline development
+- Optional live catalogue synchronization
+- Optional Gemini or Groq explanation rewriting
+- Protected admin content-management routes
+- Audit logs, request-size limits, rate limiting, and security headers
+
+## Project status
+
+### Implemented
+
+- FastAPI application and API routing
+- SQLite database and SQLAlchemy models
+- Automatic local database creation
+- Seed loading from `seed/opportunities.json` and `seed/health_topics.json`
+- Deterministic eligibility engine
+- Opportunity catalogue and filters
+- Health topics and search
+- Eligibility checking
+- JSON and Markdown action plans
+- Template explanations
+- Optional AI adapters with deterministic fallback
+- Configured data synchronization with `SyncLog` records
+- Admin sync and content-management routes
+- Audit logging for admin actions
+- Basic rate limiting and request body-size protection
+- Browser UI
+- API, service, validation, seed, accessibility, and UI tests
+- Optional Playwright end-to-end test scaffold
+
+### Still requires human or production review
+
+- Verify every government rule, document list, URL, and freshness date
+- Confirm that each source is official and currently active
+- Configure a production database and shared rate-limit storage
+- Configure HTTPS and a production reverse proxy
+- Install Playwright browsers for full browser E2E testing
+- Perform full screen-reader and accessibility review
+- Establish operational monitoring, backups, and alerting
+
+See [docs/CATALOGUE_VERIFICATION.md](docs/CATALOGUE_VERIFICATION.md) before
+marking catalogue records as verified.
 
 ## Architecture
 
-`app/` contains the FastAPI application, SQLAlchemy models, Pydantic schemas,
-eligibility rules, services, and routers. `seed/` contains offline catalogue
-data. `ui/` contains the dependency-free browser test UI. `tests/` covers the
-rules, APIs, validation, seed loading, plans, and UI shell.
+```text
+Browser UI
+    |
+    | same-origin HTTP requests
+    v
+FastAPI application
+    |
+    +-- routers/
+    |     +-- health
+    |     +-- opportunities
+    |     +-- health topics
+    |     +-- eligibility
+    |     +-- plans
+    |     +-- admin
+    |
+    +-- services/
+    |     +-- deterministic matching
+    |     +-- explanations
+    |     +-- AI adapters
+    |     +-- synchronization
+    |     +-- action plans
+    |
+    +-- SQLAlchemy
+          |
+          +-- SQLite by default
+```
 
-## Setup and Run (works offline)
-
-Python 3.12.
+Important directories:
 
 ```text
+app/                  FastAPI backend
+app/eligibility/      Rule engine and eligibility types
+app/routers/          API route modules
+app/schemas/          Pydantic request and response models
+app/services/         Matching, plans, sync, AI, and catalogue services
+data/                 Local SQLite database directory
+docs/                 Operational and verification documentation
+seed/                 Offline JSON catalogue data
+tests/                Automated tests
+tests/e2e/            Optional browser tests
+ui/                   Browser test UI
+```
+
+## Requirements
+
+### Required
+
+- Git
+- Python 3.12
+- Internet access only for installing packages or using configured live-data
+  and AI providers
+
+The application itself works offline with the local seed data.
+
+### Runtime libraries
+
+Pinned runtime dependencies are listed in
+[requirements.txt](requirements.txt):
+
+- FastAPI
+- Uvicorn
+- Pydantic
+- Pydantic Settings
+- SQLAlchemy
+- HTTPX
+- python-dotenv
+- Starlette
+- AnyIO
+- Greenlet
+- supporting typing and HTTP packages
+
+### Development and test libraries
+
+Pinned development dependencies are listed in
+[requirements-dev.txt](requirements-dev.txt):
+
+- Pytest
+- Pytest coverage
+- Respx
+- Coverage
+- Packaging
+- Pluggy
+- Iniconfig
+
+The optional Playwright E2E test imports Playwright only when it is installed.
+It is not required for the normal backend test suite.
+
+## Clone the repository
+
+Replace the URL with your fork if you are working from a fork.
+
+```powershell
+git clone https://github.com/navadeepu1/websprint-2026-Next_Step.git
+cd websprint-2026-Next_Step
+```
+
+To confirm the checkout:
+
+```powershell
+git status
+git branch --show-current
+```
+
+## Windows setup
+
+The following commands use PowerShell.
+
+### 1. Create a virtual environment
+
+```powershell
+py -3.12 -m venv .venv
+```
+
+If `py -3.12` is unavailable but `python` points to Python 3.12:
+
+```powershell
 python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env
 ```
 
-### Test UI
+### 2. Activate the environment
 
-The browser test UI is served by the same FastAPI application. After installing
-the dependencies, start the server and open `http://127.0.0.1:8000/`:
-
-```text
-uvicorn app.main:app --reload
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
 
-The UI covers the health status check, opportunity catalogue filters and
-details, health-topic search and details, eligibility evaluation, and action
-plan generation in JSON or Markdown. It uses the API at `/api/v1` and does not
-require a separate frontend build step.
+If PowerShell blocks activation for the current user, run PowerShell as the
+current user and use:
 
-### Production-readiness controls
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
 
-- Configure `DATA_SOURCE_URLS` with comma-separated JSON catalogue URLs and
-  call `POST /api/v1/admin/sync` with `X-Admin-Api-Key` to validate and upsert
-  records. Payloads may be an opportunity array or an object containing
-  `opportunities` and `health_topics`.
-- Set `SYNC_ON_START=true` to run configured syncs during startup. Every run
-  writes a `SyncLog` record and the health endpoint reports its status.
-- Set `AI_PROVIDER=noop` (the default) for deterministic explanations. Set
-  `AI_PROVIDER=gemini` or `groq` with the corresponding key to enable optional
-  cached rewriting; provider failures always fall back to templates.
-- Set `ADMIN_API_KEY` before using admin content routes. Admin writes and sync
-  actions create `AuditLog` records.
-- `RATE_LIMIT_PER_MINUTE` and `REQUEST_BODY_LIMIT_BYTES` protect the API with
-  `429` and `413` responses respectively.
+Then activate again:
 
-See [docs/CATALOGUE_VERIFICATION.md](docs/CATALOGUE_VERIFICATION.md) for the
-manual review required before marking catalogue records verified.
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-## API Reference
+### 3. Upgrade packaging tools
 
-Base path: `/api/v1`.
+```powershell
+python -m pip install --upgrade pip
+```
 
-- `GET /health`
-- `GET /opportunities`
-- `GET /opportunities/{id}`
-- `GET /health-topics`
-- `GET /health-topics/search?q=...`
-- `GET /health-topics/{id}`
-- `POST /eligibility/check`
-- `POST /plan`
-- `POST /plan?format=markdown`
+### 4. Install runtime dependencies
 
-Interactive API documentation is available at `/docs` and `/redoc`.
+```powershell
+python -m pip install -r requirements.txt
+```
 
-## Testing
+### 5. Install development and test dependencies
+
+```powershell
+python -m pip install -r requirements-dev.txt
+```
+
+## Linux and macOS setup
+
+```bash
+git clone https://github.com/navadeepu1/websprint-2026-Next_Step.git
+cd websprint-2026-Next_Step
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
+```
+
+## Configuration
+
+Copy the example environment file:
+
+### Windows
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Linux/macOS
+
+```bash
+cp .env.example .env
+```
+
+The application has safe development defaults. The most important settings
+are:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `APP_NAME` | `NextStep` | Application title |
+| `APP_ENV` | `development` | Environment name |
+| `DATABASE_URL` | `sqlite:///data/nextstep.db` | SQLAlchemy database URL |
+| `CORS_ORIGINS` | empty | Comma-separated allowed origins |
+| `ADMIN_API_KEY` | empty | Required for admin routes |
+| `AI_PROVIDER` | `noop` | `noop`, `gemini`, or `groq` |
+| `GEMINI_API_KEY` | empty | Gemini API key |
+| `GROQ_API_KEY` | empty | Groq API key |
+| `SYNC_ON_START` | `false` | Sync configured sources at startup |
+| `DATA_SOURCE_URLS` | empty | Comma-separated JSON catalogue URLs |
+| `ALLOWED_STATES` | `PB,ALL` | Accepted profile state codes |
+| `RATE_LIMIT_PER_MINUTE` | `60` | Per-client in-memory request limit |
+| `REQUEST_BODY_LIMIT_BYTES` | `32768` | Maximum request body size |
+| `SYNC_TIMEOUT_SECONDS` | `15` | Live-source request timeout |
+| `AUDIT_LOG_RETENTION_DAYS` | `365` | Intended audit retention policy |
+
+Never commit `.env`, API keys, or other credentials.
+
+## Run the application locally
+
+From the repository root, with the virtual environment activated:
+
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Linux/macOS:
+
+```bash
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Open the browser UI:
 
 ```text
-pip install -r requirements-dev.txt
+http://127.0.0.1:8000/
+```
+
+The database and seed records are created automatically during application
+startup. No migration command is required for a fresh local SQLite database.
+
+### Run on another local device
+
+To listen on all network interfaces:
+
+```powershell
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+Then open `http://YOUR-COMPUTER-IP:8000/` from the other device. Only do this
+on a trusted network and configure CORS/authentication appropriately.
+
+### Stop the server
+
+Press `Ctrl+C` in the terminal running Uvicorn.
+
+## API documentation
+
+When the server is running:
+
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
+- OpenAPI JSON: `http://127.0.0.1:8000/openapi.json`
+
+## API endpoints
+
+All API routes use the `/api/v1` prefix.
+
+### Health
+
+```text
+GET /api/v1/health
+```
+
+### Opportunities
+
+```text
+GET /api/v1/opportunities
+GET /api/v1/opportunities/{opportunity_id}
+```
+
+Supported list query parameters:
+
+- `category`
+- `verified`
+- `active`
+- `limit`
+- `offset`
+
+Example:
+
+```powershell
+curl.exe "http://127.0.0.1:8000/api/v1/opportunities?category=job&active=true&limit=20"
+```
+
+### Health topics
+
+```text
+GET /api/v1/health-topics
+GET /api/v1/health-topics/search?q=heat
+GET /api/v1/health-topics/{topic_id}
+```
+
+### Eligibility
+
+```text
+POST /api/v1/eligibility/check
+```
+
+Example request:
+
+```powershell
+$profile = @{
+  age = 20
+  education_level = "undergraduate"
+  occupation = "student"
+  annual_income = 50000
+  state = "PB"
+  need = @("study", "work")
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Uri "http://127.0.0.1:8000/api/v1/eligibility/check" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $profile
+```
+
+### Action plans
+
+JSON:
+
+```text
+POST /api/v1/plan
+```
+
+Markdown:
+
+```text
+POST /api/v1/plan?format=markdown
+```
+
+Both endpoints accept the same profile body as the eligibility endpoint.
+
+## Live-data synchronization
+
+Live synchronization is optional. The application remains usable with local
+seed data and no configured source URLs.
+
+### Supported source formats
+
+A source URL may return either:
+
+```json
+[
+  {
+    "id": "example-job",
+    "title": "Example job",
+    "category": "job",
+    "description": "Example description",
+    "criteria": {"needs": ["work"]},
+    "documents": [],
+    "official_url": "https://example.gov/apply",
+    "verified": false,
+    "active": true
+  }
+]
+```
+
+or:
+
+```json
+{
+  "opportunities": [],
+  "health_topics": []
+}
+```
+
+Invalid records are rejected individually. Successful and failed runs are
+recorded in the `sync_logs` table. Synchronization does not automatically mark
+records as verified.
+
+### Configure sources
+
+In `.env`:
+
+```text
+DATA_SOURCE_URLS=https://example.gov/catalogue.json,https://example.gov/health.json
+SYNC_TIMEOUT_SECONDS=15
+```
+
+### Run sync at application startup
+
+```text
+SYNC_ON_START=true
+```
+
+### Trigger sync manually
+
+Set an admin key first:
+
+```text
+ADMIN_API_KEY=replace-with-a-long-random-secret
+```
+
+Then call:
+
+```powershell
+curl.exe -X POST `
+  "http://127.0.0.1:8000/api/v1/admin/sync" `
+  -H "X-Admin-Api-Key: replace-with-a-long-random-secret"
+```
+
+## Admin content-management API
+
+Admin routes require the `X-Admin-Api-Key` header and are disabled when
+`ADMIN_API_KEY` is empty.
+
+Available routes:
+
+```text
+POST   /api/v1/admin/sync
+PUT    /api/v1/admin/opportunities/{id}
+DELETE /api/v1/admin/opportunities/{id}
+PUT    /api/v1/admin/health-topics/{id}
+```
+
+Admin changes and sync actions create rows in `audit_logs`.
+
+For production, use a proper secret manager, HTTPS, role-based permissions,
+and a shared audit/rate-limit store rather than relying only on a single
+development API key and in-memory limiter.
+
+## Optional AI explanations
+
+The default provider is deterministic template output:
+
+```text
+AI_PROVIDER=noop
+```
+
+To enable Gemini:
+
+```text
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your-key
+```
+
+To enable Groq:
+
+```text
+AI_PROVIDER=groq
+GROQ_API_KEY=your-key
+```
+
+AI only rewrites an existing deterministic explanation. It is not used to
+decide eligibility. If the provider is unavailable, the key is missing, the
+response is invalid, or the request fails, the application returns the
+template explanation instead. Successful responses are cached in `ai_cache`.
+
+## Run the test suite
+
+Run all standard tests:
+
+```powershell
 pytest
 ```
 
-## Security Notes
+Equivalent explicit command:
 
-Profiles are evaluated in memory and are not written to the database or logs.
-The API applies validation, CORS configuration, standard error envelopes, and
-basic security response headers. Seed records remain unverified until manually
-reviewed against their official sources.
+```powershell
+python -m pytest
+```
 
-## Accessibility Notes
+The suite covers:
 
-The test UI labels form controls, uses semantic sections and buttons, supports
-keyboard-accessible native controls, and includes a responsive phone layout.
-Full screen-reader, contrast, and automated browser accessibility testing remain
-recommended before production use.
+- Eligibility rules
+- Eligibility API
+- Opportunity API
+- Health-topic API
+- Action plans
+- Input validation
+- Seed loading
+- Synchronization and `SyncLog`
+- Admin authentication and content updates
+- AI fallback behavior
+- UI shell delivery
+- Basic UI accessibility structure
 
-## Assumptions
+### Coverage
 
-See `docs/ASSUMPTIONS.md`.
+```powershell
+pytest --cov=app --cov-report=term-missing
+```
 
-## Milestone status
+### Python compilation check
 
-Completed:
+```powershell
+python -m compileall -q app tests
+```
 
-- M0 foundation and configuration
-- M1 local database and seed data
-- M2 deterministic eligibility engine
-- M3 opportunity catalogue API
-- M4 health-topic API
-- M5 eligibility API
-- M6 JSON and Markdown action plans
-- M7 template explanations
-- M8 browser test UI
-- M9 automated baseline tests
+### JavaScript syntax check
 
-Remaining roadmap:
+If Node.js is installed:
 
-- Harden live-data synchronization with scheduled jobs, source-specific
-  adapters, and operational retry/alerting.
-- Manually verify catalogue rules, documents, URLs, and freshness dates.
-- Extend the optional AI adapters with provider health metrics and configurable
-  cache expiry.
-- Extend authenticated admin/content-management workflows with review queues
-  and role-based permissions.
-- Move rate limiting and audit storage to shared production infrastructure and
-  complete deployment hardening.
-- Add browser end-to-end and automated accessibility coverage.
+```powershell
+node --check ui\app.js
+```
+
+## Optional browser end-to-end testing
+
+The browser test is in
+[tests/e2e/test_ui_playwright.py](tests/e2e/test_ui_playwright.py).
+
+Install Playwright:
+
+```powershell
+python -m pip install playwright
+python -m playwright install chromium
+```
+
+Start the application in another terminal:
+
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Run the browser test:
+
+```powershell
+pytest -m e2e tests/e2e
+```
+
+Use another server URL if needed:
+
+```powershell
+$env:NEXTSTEP_BASE_URL = "http://127.0.0.1:8000/"
+pytest -m e2e tests/e2e
+```
+
+The normal `pytest` command skips this optional test if Playwright is not
+installed.
+
+## Database and local data
+
+Default database:
+
+```text
+data/nextstep.db
+```
+
+The application creates the `data` directory and tables automatically.
+
+Seed files:
+
+- `seed/opportunities.json`
+- `seed/health_topics.json`
+
+To use a different SQLite file for a test or local run:
+
+```powershell
+$env:DATABASE_URL = "sqlite:///data/nextstep-local.db"
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+To use another SQLAlchemy-compatible database, set `DATABASE_URL` to the
+appropriate SQLAlchemy URL and verify the deployment database behavior before
+production use.
+
+## Security and privacy
+
+Current protections include:
+
+- Pydantic request validation
+- Standardized JSON error envelopes
+- Security response headers
+- Configurable CORS
+- Request body-size limit
+- Per-client development rate limiting
+- Admin API-key protection
+- Admin audit records
+- No profile persistence
+- Deterministic eligibility decisions
+- AI fallback to templates
+
+Important production responsibilities:
+
+- Do not use a weak or shared admin key.
+- Do not expose the development server directly to the public internet.
+- Put the application behind HTTPS and a reverse proxy.
+- Use a shared rate limiter for multiple application instances.
+- Rotate credentials and store them outside source control.
+- Back up the database.
+- Review all catalogue records against official sources.
+- Keep health content informational and medically responsible.
+
+## Troubleshooting
+
+### `python` or `py` is not recognized
+
+Install Python 3.12 and ensure the Python Launcher or Python executable is on
+PATH. Then recreate the virtual environment.
+
+### `pytest` is not recognized
+
+Activate `.venv` and install development dependencies:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+python -m pytest
+```
+
+### Port 8000 is already in use
+
+Use another port:
+
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
+```
+
+Then open `http://127.0.0.1:8001/`.
+
+### The UI loads but shows `API unavailable`
+
+Confirm that the browser URL and server URL use the same host and port. Then
+check:
+
+```powershell
+Invoke-WebRequest http://127.0.0.1:8000/api/v1/health
+```
+
+### Admin returns `401`
+
+Confirm that `ADMIN_API_KEY` is set in the environment used to launch Uvicorn
+and that the request header is exactly:
+
+```text
+X-Admin-Api-Key: <same configured value>
+```
+
+Restart the server after changing `.env`.
+
+### Synchronization rejects records
+
+Check the source JSON against the schemas in
+[app/schemas/opportunity.py](app/schemas/opportunity.py) and
+[app/schemas/health.py](app/schemas/health.py). Inspect the `sync_logs` table
+and correct invalid fields, categories, URLs, or timestamps.
+
+## Useful commands
+
+Install everything needed for normal development:
+
+```powershell
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
+```
+
+Run the app:
+
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Run tests:
+
+```powershell
+python -m pytest
+```
+
+Check syntax and patch formatting:
+
+```powershell
+python -m compileall -q app tests
+git diff --check
+```
+
+Check repository status:
+
+```powershell
+git status --short
+```
+
+## License and external sources
+
+Review the repository's license and attribution requirements before
+redistributing the project or catalogue data. Government portal URLs and
+content remain subject to their own terms and should be manually verified.
