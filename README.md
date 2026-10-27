@@ -1,14 +1,17 @@
 # NextStep
 
-Offline-first citizen opportunity discovery for scholarships, jobs, farmer
-schemes, senior support, and health awareness.
+Offline-first, profile-aware opportunity discovery for students, job seekers,
+farmers, senior citizens, and families.
 
 NextStep helps a person answer:
 
 - What government or public opportunity may fit my situation?
+- Which scholarships, internships, jobs, training programs, or schemes are
+  relevant to me?
 - Why did it match or not match?
 - Which answers are still unknown?
 - Which documents and official links should I check next?
+- What should I do next, and how can I track my progress?
 
 NextStep is an informational helper. It does not replace an official
 government portal, an application decision, or medical advice.
@@ -51,6 +54,55 @@ deterministic rules. It returns:
 - A plain-language explanation
 - A practical action plan
 
+### One-stop opportunity discovery
+
+The **For me** experience groups possible matches into a single, browseable
+workspace:
+
+- Scholarships and education support
+- Internships and apprenticeships
+- Jobs and placements
+- Training and skill-building programs
+- Farmer schemes
+- Senior support
+
+The discovery response is based on the saved profile and keeps the reason for
+each result visible. It does not silently rank or reject people with an
+opaque AI score. Confirmed rule failures are shown as `NOT_ELIGIBLE`, while
+missing information is shown as `POSSIBLY_ELIGIBLE` so the person knows what
+to verify.
+
+### Citizen workspace
+
+Signed-in users can:
+
+- Save and update their eligibility profile
+- Reuse the profile for future checks
+- Save opportunities for later
+- Add opportunities to an application tracker
+- Move tracker entries through `interested`, `preparing`, `submitted`,
+  `in_review`, `completed`, and `closed`
+- Store a next step and notes for each tracked opportunity
+
+Workspace data is associated with the authenticated account and persists in
+the configured database.
+
+### Demo and preview experience
+
+Visitors do not need an account to explore the interface. The browser UI
+includes clearly labeled preview content for:
+
+- The opportunity catalogue
+- The personalized **For me** layout
+- A sample action-plan checklist
+- A sample saved profile
+- Saved opportunities
+- Application-tracker statuses and next steps
+
+Preview records are display-only. They are never written to a real user
+workspace. Signing in changes the workspace and discovery screens to use the
+authenticated user's data.
+
 The project also provides:
 
 - A searchable health-awareness catalogue
@@ -67,6 +119,8 @@ The project also provides:
   and application progress tracking
 - Personalized discovery grouped into scholarships, internships, jobs,
   training, farmer schemes, and senior support
+- Signed-out preview mode for evaluating the main product flows
+- Responsive mobile, tablet, and desktop browser layouts
 
 ## Project status
 
@@ -90,6 +144,8 @@ The project also provides:
 - Browser UI
 - API, service, validation, seed, accessibility, and UI tests
 - Optional Playwright end-to-end test scaffold
+- Browser smoke-tested preview flows for catalogue, discovery, action plan,
+  and workspace
 
 ### Still requires human or production review
 
@@ -100,6 +156,9 @@ The project also provides:
 - Install Playwright browsers for full browser E2E testing
 - Perform full screen-reader and accessibility review
 - Establish operational monitoring, backups, and alerting
+- Replace or review demo credentials before exposing the deployment publicly
+- Add a production migration strategy before changing existing database
+  schemas in a multi-instance deployment
 
 See [docs/CATALOGUE_VERIFICATION.md](docs/CATALOGUE_VERIFICATION.md) before
 marking catalogue records as verified.
@@ -120,9 +179,12 @@ FastAPI application
     |     +-- eligibility
     |     +-- plans
     |     +-- admin
+    |     +-- auth
+    |     +-- citizen workspace
     |
     +-- services/
     |     +-- deterministic matching
+    |     +-- personalized discovery
     |     +-- explanations
     |     +-- AI adapters
     |     +-- synchronization
@@ -132,6 +194,22 @@ FastAPI application
           |
           +-- SQLite by default
 ```
+
+### Request flow
+
+```text
+Browser
+  -> FastAPI route
+  -> Pydantic validation
+  -> authenticated user lookup (when required)
+  -> SQLAlchemy session
+  -> deterministic rules / catalogue service
+  -> JSON response
+```
+
+Eligibility and discovery are deterministic. Optional AI is used only for
+language rewriting and chatbot responses; it is not allowed to change an
+eligibility status, add a document, or override a rule result.
 
 Important directories:
 
@@ -217,9 +295,29 @@ It creates a Python web service with:
 The Blueprint uses Render's Starter plan because persistent disks are not
 available on the free web-service plan. Before making the service public,
 review the generated admin key and replace the seeded demo credentials, or
-remove the demo-user seeding in `app/main.py`. Configure `GROQ_API_KEY` and
+remove the demo-user seeding in [app/main.py](app/main.py). Configure
+`AUTH_SECRET`, `GROQ_API_KEY`, and
 set `AI_PROVIDER=groq` only if the optional chatbot is wanted. Set
 `CORS_ORIGINS` to the final frontend origin when the UI is hosted separately.
+
+### Render deployment checklist
+
+After the Blueprint is applied:
+
+1. Open the service's **Environment** page and confirm generated secrets are
+   present.
+2. Confirm the persistent disk is mounted at `/var/data`.
+3. Check that `DATABASE_URL` is
+   `sqlite:////var/data/nextstep.db`.
+4. Open `/api/v1/health` and confirm `status` and `database` are `ok`.
+5. Test the browser UI, account registration, profile saving, discovery, and
+   application tracker.
+6. Replace or remove the local demo accounts before public launch.
+7. Configure backups and decide how catalogue updates will be reviewed.
+
+The persistent disk protects the SQLite file across normal service restarts.
+It is not a substitute for backups, multi-instance database design, or a
+formal migration process.
 
 To confirm the checkout:
 
@@ -319,7 +417,7 @@ are:
 | `DATABASE_URL` | `sqlite:///data/nextstep.db` | SQLAlchemy database URL |
 | `CORS_ORIGINS` | empty | Comma-separated allowed origins |
 | `ADMIN_API_KEY` | empty | Required for admin routes |
-| `AI_PROVIDER` | `groq` | `noop`, `gemini`, or `groq` |
+| `AI_PROVIDER` | `noop` | `noop`, `gemini`, or `groq` |
 | `GEMINI_API_KEY` | empty | Gemini API key |
 | `GROQ_API_KEY` | empty | Groq API key |
 | `GROQ_MODEL` | `openai/gpt-oss-20b` | Groq chat-completion model; verify availability in your Groq account |
@@ -331,6 +429,11 @@ are:
 | `DATA_SOURCE_URLS` | empty | Comma-separated JSON catalogue URLs |
 | `ALLOWED_STATES` | All Indian state/UT codes plus `ALL` | Accepted profile state codes; override to restrict a deployment |
 | `RATE_LIMIT_PER_MINUTE` | `60` | Per-client in-memory request limit |
+| `REQUEST_BODY_LIMIT_BYTES` | `32768` | Maximum request body size |
+| `SYNC_TIMEOUT_SECONDS` | `15` | Live-source request timeout |
+| `AUDIT_LOG_RETENTION_DAYS` | `365` | Intended audit retention policy |
+| `AUTH_SECRET` | development placeholder | Session/authentication configuration secret |
+| `AUTH_SESSION_HOURS` | `24` | Authenticated session lifetime |
 
 For open-ended chatbot answers, configure Groq before starting the server:
 
@@ -350,9 +453,6 @@ Never put a real key in `.env.example`, README files, screenshots, or chat
 messages. The key previously pasted into `.env.example` must be revoked in the
 Groq console and replaced with a new key stored only in the ignored local
 `.env` file.
-| `REQUEST_BODY_LIMIT_BYTES` | `32768` | Maximum request body size |
-| `SYNC_TIMEOUT_SECONDS` | `15` | Live-source request timeout |
-| `AUDIT_LOG_RETENTION_DAYS` | `365` | Intended audit retention policy |
 
 Never commit `.env`, API keys, or other credentials.
 
@@ -375,6 +475,22 @@ Open the browser UI:
 ```text
 http://127.0.0.1:8000/
 ```
+
+If you open the `ui` folder with VS Code Live Server on port `5500`, the UI
+automatically targets a backend running on `http://127.0.0.1:8000` and local
+development CORS allows that origin. For another frontend port or backend
+host, set `CORS_ORIGINS` and provide an API base before loading the script:
+
+```html
+<script>
+  window.NEXTSTEP_API_BASE = "http://127.0.0.1:8000/api/v1";
+</script>
+<script src="/app.js?v=4"></script>
+```
+
+The recommended setup is still to open the UI from Uvicorn at
+`http://127.0.0.1:8000/`, because the browser UI and API then use the same
+origin.
 
 The database and seed records are created automatically during application
 startup. No migration command is required for a fresh local SQLite database.
@@ -427,6 +543,39 @@ GET    /api/v1/applications
 POST   /api/v1/applications
 PATCH  /api/v1/applications/{application_id}
 ```
+
+`GET /api/v1/profile` returns `404` until the account has saved a profile.
+`GET /api/v1/discover` also requires a saved profile and returns grouped
+sections containing only `ELIGIBLE` and `POSSIBLY_ELIGIBLE` results.
+
+Example:
+
+```powershell
+$login = Invoke-RestMethod `
+  -Uri "http://127.0.0.1:8000/api/v1/auth/login" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body (@{ email = "demo@nextstep.local"; password = "Demo@12345" } | ConvertTo-Json)
+
+$headers = @{ Authorization = "Bearer $($login.access_token)" }
+Invoke-RestMethod `
+  -Uri "http://127.0.0.1:8000/api/v1/discover" `
+  -Headers $headers
+```
+
+### Authentication API
+
+```text
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET  /api/v1/auth/me
+POST /api/v1/auth/logout
+```
+
+Registration and login return a bearer token. Store it only in a protected
+client-side session mechanism appropriate for the deployment. The included
+demo UI uses browser local storage for this development-oriented application;
+review that choice before a high-security production launch.
 
 The browser UI exposes these features under **My workspace**. Profile data is
 stored per account, while saved opportunities and tracker entries remain
@@ -506,6 +655,10 @@ POST /api/v1/plan?format=markdown
 ```
 
 Both endpoints accept the same profile body as the eligibility endpoint.
+
+The browser action-plan screen offers JSON checklist output and printable
+Markdown output. When no profile has been submitted, it displays a labeled
+sample checklist so the flow can be demonstrated without creating an account.
 
 ### Website chatbot
 
@@ -847,6 +1000,28 @@ Seed files:
 - `seed/opportunities.json`
 - `seed/health_topics.json`
 
+The current seed catalogue contains opportunities across scholarships,
+internships, jobs, training-related pathways, farmer schemes, and senior
+support, along with health-awareness topics for students, farmers, seniors,
+and urgent-care education. Seed records are inserted when missing; existing
+records are not overwritten on startup. This lets a persistent Render
+database receive newly added seed records without discarding existing
+admin-managed content.
+
+The main persisted tables include:
+
+| Table | Purpose |
+|---|---|
+| `users` | Registered accounts |
+| `auth_sessions` | Hashed bearer-session tokens |
+| `user_profiles` | Saved eligibility profile per account |
+| `saved_opportunities` | User shortlist |
+| `application_tracker` | User application status, notes, and next step |
+| `opportunities` | Opportunity catalogue |
+| `health_topics` | Health-awareness catalogue |
+| `sync_logs` | Live-source synchronization history |
+| `audit_logs` | Admin action history |
+
 To use a different SQLite file for a test or local run:
 
 ```powershell
@@ -870,7 +1045,7 @@ Current protections include:
 - Per-client development rate limiting
 - Admin API-key protection
 - Admin audit records
-- No profile persistence
+- Account-scoped profile persistence
 - Deterministic eligibility decisions
 - AI fallback to templates
 
@@ -880,6 +1055,8 @@ Important production responsibilities:
 - Do not expose the development server directly to the public internet.
 - Put the application behind HTTPS and a reverse proxy.
 - Use a shared rate limiter for multiple application instances.
+- Use a production-grade database and migration tool when scaling beyond the
+  single-instance SQLite deployment.
 - Rotate credentials and store them outside source control.
 - Back up the database.
 - Review all catalogue records against official sources.
@@ -920,6 +1097,13 @@ check:
 ```powershell
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/health
 ```
+
+If the UI is running through Live Server, make sure Uvicorn is also running
+on port `8000`. A browser `Failed to fetch` message means the browser could
+not connect to the API at all; it is different from an API response such as
+`401`, `422`, or `500`. Open the browser developer tools and check the
+Network tab for the exact request URL. For a separate frontend origin,
+configure its full origin in `CORS_ORIGINS`.
 
 ### Admin returns `401`
 

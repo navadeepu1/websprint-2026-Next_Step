@@ -48,18 +48,19 @@ def create_app() -> FastAPI:
                 session.add(User(email="demo@nextstep.local", display_name="Demo Citizen", password_hash=hash_password("Demo@12345"), created_at=now))
                 session.add(User(email="student@nextstep.local", display_name="Student Demo", password_hash=hash_password("Student@12345"), created_at=now))
                 session.commit()
+            if settings.sync_on_start:
+                try:
+                    sync_configured_sources(session)
+                    app.state.sync_status = "success"
+                except Exception:
+                    app.state.sync_status = "failed"
         finally:
             session.close()
         app.state.engine = engine
         app.state.session_factory = factory
         app.state.settings = settings
-        app.state.sync_status = "not_run"
-        if settings.sync_on_start:
-            try:
-                sync_configured_sources(session)
-                app.state.sync_status = "success"
-            except Exception:
-                app.state.sync_status = "failed"
+        if not settings.sync_on_start:
+            app.state.sync_status = "not_run"
         yield
         engine.dispose()
 
@@ -69,6 +70,13 @@ def create_app() -> FastAPI:
     register_error_handlers(application)
     install_request_guards(application)
     origins = settings.cors_origin_list()
+    if settings.app_env != "production":
+        origins = list(dict.fromkeys(origins + [
+            "http://localhost:5500",
+            "http://127.0.0.1:5500",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+        ]))
     application.add_middleware(
         CORSMiddleware,
         allow_origins=origins,

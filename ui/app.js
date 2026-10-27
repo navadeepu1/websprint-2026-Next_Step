@@ -1,4 +1,7 @@
-const API = "/api/v1";
+const localLiveServer = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+  && window.location.port === "5500";
+const API = window.NEXTSTEP_API_BASE
+  || (localLiveServer ? "http://127.0.0.1:8000/api/v1" : "/api/v1");
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -29,20 +32,32 @@ function showToast(message) {
 
 async function request(path, options = {}) {
   const authHeaders = accessToken ? { Authorization: "Bearer " + accessToken } : {};
-  const response = await fetch(`${API}${path}`, {
-    headers: { "Accept": "application/json", ...authHeaders, ...(options.headers || {}) },
-    ...options,
-  });
+  let response;
+  try {
+    response = await fetch(`${API}${path}`, {
+      ...options,
+      headers: { "Accept": "application/json", ...authHeaders, ...(options.headers || {}) },
+    });
+  } catch (problem) {
+    const apiOrigin = new URL(API, window.location.href).origin;
+    throw new Error(`Unable to reach the NextStep API at ${apiOrigin}. Start the backend or open this UI from the running NextStep server.`);
+  }
   if (!response.ok) {
     let message = `Request failed (${response.status})`;
     try {
       const body = await response.json();
-      message = body.message || body.detail || body.errors?.[0]?.message || message;
+      message = body.message
+        || body.detail
+        || body.error?.message
+        || body.errors?.[0]?.message
+        || message;
     } catch (_) {
       // The status text is the useful fallback for non-JSON errors.
     }
 
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
   if (response.status === 204 || response.status === 304) return null;
   return response.headers.get("content-type")?.includes("text/") ? response.text() : response.json();
@@ -91,7 +106,9 @@ async function submitAuth(event) {
     closeAuth();
     showToast(`Signed in as ${result.user.display_name}.`);
   } catch (problem) {
-    error.textContent = problem.message;
+    error.textContent = problem.message.includes("Unable to reach")
+      ? `${problem.message} If you are using Live Server, start Uvicorn on port 8000 and keep CORS enabled for the local frontend.`
+      : problem.message;
     error.hidden = false;
   }
 }
@@ -186,6 +203,13 @@ async function checkEligibility(event) {
   error.hidden = true;
   try {
     lastProfile = profileFromForm();
+    if (accessToken) {
+      await request("/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lastProfile),
+      });
+    }
     const area = $("#eligibility-results");
     area.hidden = false;
     setLoading(area, "Evaluating opportunities against your profileâ€¦");
@@ -315,7 +339,12 @@ async function loadDiscover() {
     sections.querySelectorAll("[data-save-opportunity]").forEach((button) => button.addEventListener("click", () => saveOpportunity(button.dataset.saveOpportunity)));
     sections.querySelectorAll("[data-track-opportunity]").forEach((button) => button.addEventListener("click", () => trackOpportunity(button.dataset.trackOpportunity)));
   } catch (problem) {
-    setError(sections, problem);
+    if (problem.status === 404) {
+      sections.innerHTML = `<div class="empty"><strong>Complete your profile to unlock personalised matches.</strong><br>Tell us your education, occupation, needs, and region first.<br><button class="button primary" data-go="eligibility">Complete profile</button></div>`;
+      sections.querySelector("[data-go]").addEventListener("click", () => navigate("eligibility"));
+    } else {
+      setError(sections, problem);
+    }
   }
 }
 
