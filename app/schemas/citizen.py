@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import Field
 
 from app.schemas.common import APIModel
+from app.schemas.eligibility import EligibilityResultOut
 from app.schemas.opportunity import OpportunityOut
 from app.schemas.profile import ProfileIn
 
@@ -40,3 +41,16 @@ class ApplicationOut(APIModel):
     notes: str
     next_step: str
     updated_at: datetime
+
+
+class DiscoverySection(APIModel):
+    category: str
+    title: str
+    count: int
+    opportunities: list[EligibilityResultOut]
+
+
+class DiscoveryOut(APIModel):
+    profile: ProfileOut
+    total_matches: int
+    sections: list[DiscoverySection]

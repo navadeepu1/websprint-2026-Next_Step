@@ -18,6 +18,7 @@
         <a href="#dashboard" data-view="dashboard">Overview</a>
         <a href="#eligibility" data-view="eligibility">Check eligibility</a>
         <a href="#opportunities" data-view="opportunities">Opportunities</a>
+        <a href="#discover" data-view="discover">For me</a>
         <a href="#health-topics" data-view="health-topics">Health topics</a>
         <a href="#plan" data-view="plan">My action plan</a>
         <a href="#workspace" data-view="workspace">My workspace</a>
@@ -118,8 +119,15 @@
 
       <section id="opportunities" class="view" aria-labelledby="opportunities-title">
         <div class="page-heading"><div><p class="eyebrow">Explore the catalogue</p><h1 id="opportunities-title">Opportunities</h1><p>Browse active records and open the official source for application details.</p></div></div>
-        <div class="toolbar panel"><label>Category<select id="opportunity-category"><option value="">All categories</option><option value="scholarship">Scholarship</option><option value="job">Jobs</option><option value="farmer_scheme">Farmer schemes</option><option value="senior_support">Senior support</option></select></label><label>Verification<select id="opportunity-verified"><option value="">Any status</option><option value="true">Verified only</option><option value="false">Unverified</option></select></label><button class="button primary" id="load-opportunities">Refresh catalogue</button></div>
+        <div class="toolbar panel"><label>Category<select id="opportunity-category"><option value="">All categories</option>        <option value="scholarship">Scholarship</option><option value="internship">Internships</option><option value="job">Jobs</option><option value="training">Training</option><option value="farmer_scheme">Farmer schemes</option><option value="senior_support">Senior support</option></select></label><label>Verification<select id="opportunity-verified"><option value="">Any status</option><option value="true">Verified only</option><option value="false">Unverified</option></select></label><button class="button primary" id="load-opportunities">Refresh catalogue</button></div>
         <div id="opportunity-list" class="card-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="discover" class="view" aria-labelledby="discover-title">
+        <div class="page-heading"><div><p class="eyebrow">Personalised opportunity hub</p><h1 id="discover-title">Opportunities for me</h1><p>One place for scholarships, internships, jobs, training, schemes, and support matched to your profile.</p></div></div>
+        <div id="discover-login" class="notice">Sign in and save your profile to see your personalised opportunity hub.</div>
+        <div id="discover-summary" class="result-summary" hidden></div>
+        <div id="discover-sections" class="discover-sections"></div>
       </section>
 
       <section id="health-topics" class="view" aria-labelledby="health-title">
@@ -139,10 +147,10 @@
         <div class="page-heading"><div><p class="eyebrow">Your progress</p><h1 id="workspace-title">My workspace</h1><p>Keep your profile, promising opportunities, and application progress together.</p></div></div>
         <div id="workspace-login" class="notice">Sign in to save your profile and track opportunities across sessions.</div>
         <div class="workspace-grid">
-          <div class="panel"><div class="panel-heading"><div><h2>Saved profile</h2><p>Used to prefill future eligibility checks.</p></div></div><div id="saved-profile"><div class="empty">No saved profile yet.</div></div></div>
-          <div class="panel"><div class="panel-heading"><div><h2>Saved opportunities</h2><p>Shortlist records to review later.</p></div></div><div id="saved-opportunities"><div class="empty">Nothing saved yet.</div></div></div>
+          <div class="panel"><div class="panel-heading"><div><h2>Saved profile</h2><p>Used to prefill future eligibility checks.</p></div></div><div id="saved-profile"><div class="empty">Loading your profile preview…</div></div></div>
+          <div class="panel"><div class="panel-heading"><div><h2>Saved opportunities</h2><p>Shortlist records to review later.</p></div></div><div id="saved-opportunities"><div class="empty">Loading your shortlist preview…</div></div></div>
         </div>
-        <div class="panel workspace-tracker"><div class="panel-heading"><div><h2>Application tracker</h2><p>Track each opportunity from interest to completion.</p></div></div><div id="application-list"><div class="empty">No applications tracked yet.</div></div></div>
+        <div class="panel workspace-tracker"><div class="panel-heading"><div><h2>Application tracker</h2><p>Track each opportunity from interest to completion.</p></div></div>        <div id="application-list"><div class="empty">Loading your tracker preview…</div></div></div>
       </section>
     </main>
     <section class="auth-dialog" id="auth-dialog" hidden aria-labelledby="auth-title">

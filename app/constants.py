@@ -4,7 +4,7 @@ HEALTH_DISCLAIMER = (
     "difficulty breathing, or unconsciousness, call local emergency services immediately."
 )
 
-CATEGORIES = ("scholarship", "job", "farmer_scheme", "senior_support")
+CATEGORIES = ("scholarship", "internship", "job", "training", "farmer_scheme", "senior_support")
 EDUCATION_LEVELS = (
     "none",
     "primary",

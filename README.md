@@ -65,6 +65,8 @@ The project also provides:
 - Audit logs, request-size limits, rate limiting, and security headers
 - Authenticated citizen workspace with saved profiles, saved opportunities,
   and application progress tracking
+- Personalized discovery grouped into scholarships, internships, jobs,
+  training, farmer schemes, and senior support
 
 ## Project status
 
@@ -417,6 +419,7 @@ After signing in, send the returned access token as a bearer token:
 ```text
 GET    /api/v1/profile
 PUT    /api/v1/profile
+GET    /api/v1/discover
 GET    /api/v1/saved-opportunities
 POST   /api/v1/saved-opportunities/{opportunity_id}
 DELETE /api/v1/saved-opportunities/{opportunity_id}
@@ -428,6 +431,11 @@ PATCH  /api/v1/applications/{application_id}
 The browser UI exposes these features under **My workspace**. Profile data is
 stored per account, while saved opportunities and tracker entries remain
 available after signing out and back in.
+
+The UI also includes a signed-out preview mode so evaluators can explore the
+catalogue, personalized opportunity layout, action-plan checklist, and
+application tracker before creating an account. Preview records are labeled
+and are never written to a user's workspace.
 
 ### Opportunities
 

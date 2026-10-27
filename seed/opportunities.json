@@ -1,5 +1,51 @@
 [
   {
+    "id": "nats-student-internships",
+    "title": "National Apprenticeship Training Scheme — Student Placements",
+    "category": "internship",
+    "description": "Government-supported apprenticeship and workplace learning opportunities for diploma and graduate students. Check live employers, duration, and stipend details on the official portal.",
+    "criteria": {
+      "min_age": 16,
+      "max_age": null,
+      "education_levels": ["diploma", "undergraduate", "postgraduate"],
+      "occupations": ["student", "unemployed"],
+      "max_annual_income": null,
+      "states": ["ALL"],
+      "needs": ["study", "work"],
+      "requires_land": null,
+      "disability_required": null
+    },
+    "documents": ["Education certificate", "Identity document", "Bank account details"],
+    "official_url": "https://nats.education.gov.in/",
+    "source_name": "NATS / Department of Higher Education",
+    "last_verified": null,
+    "verified": false,
+    "active": true
+  },
+  {
+    "id": "internshala-student-opportunities",
+    "title": "Student Internship Discovery",
+    "category": "internship",
+    "description": "A starting point for finding private internships and work experience. Verify the employer, stipend, responsibilities, and application terms before sharing personal information.",
+    "criteria": {
+      "min_age": 16,
+      "max_age": null,
+      "education_levels": ["12th", "diploma", "undergraduate", "postgraduate"],
+      "occupations": ["student", "unemployed"],
+      "max_annual_income": null,
+      "states": ["ALL"],
+      "needs": ["study", "work"],
+      "requires_land": null,
+      "disability_required": null
+    },
+    "documents": ["Resume or student profile"],
+    "official_url": "https://internshala.com/",
+    "source_name": "Internshala",
+    "last_verified": null,
+    "verified": false,
+    "active": true
+  },
+  {
     "id": "nsp-pre-matric",
     "title": "National Scholarship Portal — Pre-Matric Scholarships",
     "category": "scholarship",

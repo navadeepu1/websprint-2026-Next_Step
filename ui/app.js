@@ -10,6 +10,14 @@ let toastTimer;
 const chatHistory = [];
 let authMode = "login";
 let accessToken = localStorage.getItem("nextstep_access_token");
+const demoProfile = {
+  age: 21,
+  education_level: "undergraduate",
+  occupation: "student",
+  annual_income: 0,
+  state: "PB",
+  need: ["study", "work"],
+};
 
 function showToast(message) {
   const toast = $("#toast");
@@ -137,6 +145,8 @@ function navigate(view) {
   if (target === "opportunities" && !$("#opportunity-list").dataset.loaded) loadOpportunities();
   if (target === "health-topics" && !$("#topic-list").dataset.loaded) loadTopics();
   if (target === "workspace") loadWorkspace();
+  if (target === "discover") loadDiscover();
+  if (target === "plan" && !$("#plan-results").innerHTML) renderDemoPlan();
 }
 
 function profileFromForm() {
@@ -248,6 +258,7 @@ async function loadWorkspace() {
   const loginNotice = $("#workspace-login");
   if (!accessToken) {
     loginNotice.hidden = false;
+    renderDemoWorkspace();
     return;
   }
   loginNotice.hidden = true;
@@ -268,6 +279,69 @@ async function loadWorkspace() {
   } catch (problem) {
     setError($("#application-list"), problem);
   }
+}
+
+function demoOpportunity(title, category, status, description) {
+  return { id: `demo-${category}-${title.toLowerCase().replaceAll(" ", "-")}`, title, category, status, description };
+}
+
+function renderDemoWorkspace() {
+  $("#saved-profile").innerHTML = `<div class="demo-label">Preview data</div>${workspaceProfileMarkup(demoProfile)}<p class="demo-copy">Sign in to save this profile and keep it across devices.</p>`;
+  $("#saved-opportunities").innerHTML = [
+    demoOpportunity("National Apprenticeship Training Scheme", "internship", "ELIGIBLE", "Student placement and workplace learning"),
+    demoOpportunity("Post-Matric Scholarship", "scholarship", "POSSIBLY_ELIGIBLE", "Confirm current income and document rules"),
+  ].map((item) => `<div class="workspace-item"><div><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.description)}</small></div><span class="status ${item.status}">${item.status.replaceAll("_", " ")}</span></div>`).join("");
+  $("#application-list").innerHTML = [
+    ["National Career Service registration", "preparing", "Create your job seeker profile"],
+    ["Student Internship Discovery", "interested", "Review the employer and stipend"],
+  ].map(([title, status, next]) => `<article class="tracker-row"><div><strong>${title}</strong><small>${next}</small></div><span class="status ${status === "preparing" ? "POSSIBLY_ELIGIBLE" : "ELIGIBLE"}">${status.replaceAll("_", " ")}</span></article>`).join("");
+}
+
+async function loadDiscover() {
+  const login = $("#discover-login");
+  const sections = $("#discover-sections");
+  if (!accessToken) {
+    login.hidden = false;
+    await renderDemoDiscover();
+    return;
+  }
+  login.hidden = true;
+  setLoading(sections, "Finding opportunities that fit your profile…");
+  try {
+    const result = await request("/discover");
+    $("#discover-summary").hidden = false;
+    $("#discover-summary").innerHTML = `<span class="count-chip good">${result.total_matches} possible matches</span><span>Based on your saved profile · ${escapeHtml(result.profile.state)}</span>`;
+    sections.innerHTML = result.sections.length ? result.sections.map((section) => `<section class="discover-section"><div class="section-heading"><div><p class="eyebrow">${section.count} matches</p><h2>${escapeHtml(section.title)}</h2></div></div><div class="card-grid">${section.opportunities.map((item) => `<article class="result-card"><div class="result-top"><div><span class="card-tag">${escapeHtml(item.status.replaceAll("_", " "))}</span><h3>${escapeHtml(item.title)}</h3></div><span class="status ${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll("_", " "))}</span></div><p>${escapeHtml(item.reasons[0]?.message || "Review the opportunity details and official source.")}</p><div class="card-actions"><button class="button ghost small" data-save-opportunity="${escapeHtml(item.id)}">Save</button><button class="button secondary small" data-track-opportunity="${escapeHtml(item.id)}">Track</button>${item.official_url ? `<a class="button primary small" href="${escapeHtml(item.official_url)}" target="_blank" rel="noreferrer">Official source</a>` : ""}</div></article>`).join("")}</div></section>`).join("") : `<div class="empty">No possible matches yet. Update your profile with more details to broaden discovery.</div>`;
+    sections.querySelectorAll("[data-save-opportunity]").forEach((button) => button.addEventListener("click", () => saveOpportunity(button.dataset.saveOpportunity)));
+    sections.querySelectorAll("[data-track-opportunity]").forEach((button) => button.addEventListener("click", () => trackOpportunity(button.dataset.trackOpportunity)));
+  } catch (problem) {
+    setError(sections, problem);
+  }
+}
+
+async function renderDemoDiscover() {
+  const sections = $("#discover-sections");
+  setLoading(sections, "Loading the sample opportunity hub…");
+  try {
+    const items = await request("/opportunities?active=true&limit=100");
+    const grouped = items.reduce((all, item) => {
+      (all[item.category] ||= []).push(item);
+      return all;
+    }, {});
+    const titles = { scholarship: "Scholarships", internship: "Internships", job: "Jobs and placements", training: "Training and skill building", farmer_scheme: "Farmer schemes", senior_support: "Senior support" };
+    sections.innerHTML = Object.entries(grouped).map(([category, records]) => `<section class="discover-section"><div class="section-heading"><div><p class="eyebrow">${records.length} sample matches</p><h2>${titles[category] || category}</h2></div></div><div class="card-grid">${records.slice(0, 3).map((item) => `<article class="result-card"><div class="result-top"><div><span class="card-tag">Preview match</span><h3>${escapeHtml(item.title)}</h3></div><span class="status POSSIBLY_ELIGIBLE">Review fit</span></div><p>${escapeHtml(item.description)}</p><div class="card-actions">${item.official_url ? `<a class="button primary small" href="${escapeHtml(item.official_url)}" target="_blank" rel="noreferrer">Official source</a>` : ""}<button class="button ghost small" data-demo-signin>Save after sign in</button></div></article>`).join("")}</div></section>`).join("");
+    $("#discover-summary").hidden = false;
+    $("#discover-summary").innerHTML = `<span class="count-chip good">${items.length} catalogue opportunities</span><span>Preview mode · sign in for profile-specific matches</span>`;
+    sections.querySelectorAll("[data-demo-signin]").forEach((button) => button.addEventListener("click", () => openAuth()));
+  } catch (problem) {
+    setError(sections, problem);
+  }
+}
+
+function renderDemoPlan() {
+  const area = $("#plan-results");
+  area.hidden = false;
+  area.innerHTML = `<div class="demo-label">Sample action plan</div><div class="result-card"><h2>Student opportunity starter plan</h2><ul class="checklist"><li><input type="checkbox" aria-label="Create a student profile"><span>Create a student profile on the official opportunity portal</span></li><li><input type="checkbox" aria-label="Prepare resume"><span>Prepare a one-page resume and education certificate</span></li><li><input type="checkbox" aria-label="Check deadlines"><span>Check the application deadline and eligibility rules</span></li><li><input type="checkbox" aria-label="Track application"><span>Save the opportunity and track your next step</span></li></ul><h3>Documents to gather</h3><p>Education certificate · Identity document · Bank account details · Resume</p><div class="notice">This is preview data. Generate a personal plan after completing your profile.</div></div>`;
 }
 
 async function showOpportunity(id) {

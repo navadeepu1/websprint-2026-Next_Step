@@ -10,7 +10,7 @@ from app.database import Base, make_engine, make_session_factory
 from app.errors import register_error_handlers
 from app.middleware import install_request_guards
 from app.routers import admin, auth, chat, citizen, eligibility, health, health_topics, opportunities, plan
-from app.seed import database_is_empty, load_seed_data
+from app.seed import load_seed_data
 from app.services.sync import sync_configured_sources
 from app.models import User
 from app.services.auth import hash_password
@@ -42,8 +42,7 @@ def create_app() -> FastAPI:
         factory = make_session_factory(engine)
         session = factory()
         try:
-            if database_is_empty(session):
-                load_seed_data(session)
+            load_seed_data(session)
             if session.scalar(select(User).where(User.email == "demo@nextstep.local")) is None:
                 now = datetime.now(timezone.utc).replace(tzinfo=None)
                 session.add(User(email="demo@nextstep.local", display_name="Demo Citizen", password_hash=hash_password("Demo@12345"), created_at=now))

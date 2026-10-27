@@ -25,6 +25,10 @@ def test_authenticated_citizen_can_save_profile_opportunity_and_application(tmp_
 
         assert client.put("/api/v1/profile", json=profile, headers=headers).status_code == 200
         assert client.get("/api/v1/profile", headers=headers).json()["occupation"] == "student"
+        discovery = client.get("/api/v1/discover", headers=headers)
+        assert discovery.status_code == 200
+        assert discovery.json()["total_matches"] > 0
+        assert any(section["category"] == "internship" for section in discovery.json()["sections"])
 
         opportunities = client.get("/api/v1/opportunities?active=true", headers=headers).json()
         opportunity_id = opportunities[0]["id"]

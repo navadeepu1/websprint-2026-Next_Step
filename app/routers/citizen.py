@@ -7,6 +7,8 @@ from app.models import ApplicationTracker, Opportunity, SavedOpportunity, UserPr
 from app.schemas.citizen import (
     ApplicationIn,
     ApplicationOut,
+    DiscoveryOut,
+    DiscoverySection,
     ApplicationUpdate,
     ProfileOut,
     SavedOpportunityOut,
@@ -14,6 +16,7 @@ from app.schemas.citizen import (
 from app.schemas.profile import ProfileIn
 from app.services.auth import user_from_token
 from app.services.opportunities import to_out
+from app.services.discovery import discover, serialize_results
 
 router = APIRouter()
 
@@ -26,6 +29,25 @@ def _current_user(request: Request, authorization: str | None):
 
 def _now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+@router.get("/discover", response_model=DiscoveryOut)
+def discover_for_user(request: Request, authorization: str | None = Header(default=None)) -> DiscoveryOut:
+    session, user = _current_user(request, authorization)
+    try:
+        if user is None:
+            raise HTTPException(status_code=401, detail="Authentication required.")
+        record = session.get(UserProfile, user.id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="Save a profile before discovering opportunities.")
+        profile = ProfileOut(**record.profile, updated_at=record.updated_at)
+        sections = [
+            DiscoverySection(category=category, title=title, count=len(items), opportunities=serialize_results(items))
+            for category, title, items in discover(session, ProfileIn(**record.profile))
+        ]
+        return DiscoveryOut(profile=profile, total_matches=sum(section.count for section in sections), sections=sections)
+    finally:
+        session.close()
 
 
 @router.get("/profile", response_model=ProfileOut)

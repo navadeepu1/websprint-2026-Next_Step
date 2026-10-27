@@ -32,35 +32,37 @@ def load_seed_data(session: Session, seed_dir: Path | None = None) -> None:
     if opportunities_path.exists():
         records = json.loads(opportunities_path.read_text(encoding="utf-8"))
         for item in records:
-            session.merge(
-                Opportunity(
-                    id=item["id"],
-                    title=item["title"],
-                    category=item["category"],
-                    description=item["description"],
-                    criteria=item.get("criteria") or {},
-                    documents=item.get("documents") or [],
-                    official_url=item.get("official_url"),
-                    source_name=item.get("source_name"),
-                    last_verified=_parse_dt(item.get("last_verified")),
-                    verified=bool(item.get("verified", False)),
-                    active=bool(item.get("active", True)),
-                    updated_at=_parse_dt(item.get("updated_at")) or now,
+            if session.get(Opportunity, item["id"]) is None:
+                session.add(
+                    Opportunity(
+                        id=item["id"],
+                        title=item["title"],
+                        category=item["category"],
+                        description=item["description"],
+                        criteria=item.get("criteria") or {},
+                        documents=item.get("documents") or [],
+                        official_url=item.get("official_url"),
+                        source_name=item.get("source_name"),
+                        last_verified=_parse_dt(item.get("last_verified")),
+                        verified=bool(item.get("verified", False)),
+                        active=bool(item.get("active", True)),
+                        updated_at=_parse_dt(item.get("updated_at")) or now,
+                    )
                 )
-            )
     if topics_path.exists():
         records = json.loads(topics_path.read_text(encoding="utf-8"))
         for item in records:
-            session.merge(
-                HealthTopic(
-                    id=item["id"],
-                    title=item["title"],
-                    summary=item["summary"],
-                    warning_signs=item.get("warning_signs") or [],
-                    when_to_seek_help=item.get("when_to_seek_help") or [],
-                    source_url=item.get("source_url"),
-                    last_verified=_parse_dt(item.get("last_verified")),
-                    updated_at=_parse_dt(item.get("updated_at")) or now,
+            if session.get(HealthTopic, item["id"]) is None:
+                session.add(
+                    HealthTopic(
+                        id=item["id"],
+                        title=item["title"],
+                        summary=item["summary"],
+                        warning_signs=item.get("warning_signs") or [],
+                        when_to_seek_help=item.get("when_to_seek_help") or [],
+                        source_url=item.get("source_url"),
+                        last_verified=_parse_dt(item.get("last_verified")),
+                        updated_at=_parse_dt(item.get("updated_at")) or now,
+                    )
                 )
-            )
     session.commit()
