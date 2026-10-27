@@ -286,19 +286,20 @@ This repository includes a [`render.yaml`](render.yaml) Blueprint. In Render,
 choose **New > Blueprint**, connect this repository, and apply the Blueprint.
 It creates a Python web service with:
 
+- Python 3.12, selected by `.python-version`
 - Uvicorn bound to Render's `$PORT`
 - `/api/v1/health` as the health check
-- A 1 GB persistent disk mounted at `/var/data`
-- SQLite stored at `/var/data/nextstep.db`
+- SQLite stored at `data/nextstep.db`
 - Render-generated values for `AUTH_SECRET` and `ADMIN_API_KEY`
 
-The Blueprint uses Render's Starter plan because persistent disks are not
-available on the free web-service plan. Before making the service public,
-review the generated admin key and replace the seeded demo credentials, or
-remove the demo-user seeding in [app/main.py](app/main.py). Configure
-`AUTH_SECRET`, `GROQ_API_KEY`, and
-set `AI_PROVIDER=groq` only if the optional chatbot is wanted. Set
-`CORS_ORIGINS` to the final frontend origin when the UI is hosted separately.
+The Blueprint uses Render's Free plan. Free web services do not provide
+persistent disks, so SQLite data can be lost when the service restarts, spins
+down, or redeploys. Use this setup for demos, not durable user data. Before
+making the service public, review the generated admin key and replace the
+seeded demo credentials, or remove the demo-user seeding in
+[app/main.py](app/main.py). Configure `AUTH_SECRET`, `GROQ_API_KEY`, and set
+`AI_PROVIDER=groq` only if the optional chatbot is wanted. Set `CORS_ORIGINS`
+to the final frontend origin when the UI is hosted separately.
 
 ### Render deployment checklist
 
@@ -306,18 +307,17 @@ After the Blueprint is applied:
 
 1. Open the service's **Environment** page and confirm generated secrets are
    present.
-2. Confirm the persistent disk is mounted at `/var/data`.
-3. Check that `DATABASE_URL` is
-   `sqlite:////var/data/nextstep.db`.
+2. Confirm the deploy logs show Python 3.12.
+3. Check that `DATABASE_URL` is `sqlite:///data/nextstep.db`.
 4. Open `/api/v1/health` and confirm `status` and `database` are `ok`.
 5. Test the browser UI, account registration, profile saving, discovery, and
    application tracker.
 6. Replace or remove the local demo accounts before public launch.
 7. Configure backups and decide how catalogue updates will be reviewed.
 
-The persistent disk protects the SQLite file across normal service restarts.
-It is not a substitute for backups, multi-instance database design, or a
-formal migration process.
+The Free service's filesystem is temporary and does not protect the SQLite
+file across restarts or redeploys. Use a persistent database for data that
+must survive.
 
 To confirm the checkout:
 
