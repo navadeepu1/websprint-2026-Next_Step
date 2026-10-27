@@ -63,6 +63,8 @@ The project also provides:
 - Optional Gemini or Groq explanation rewriting
 - Protected admin content-management routes
 - Audit logs, request-size limits, rate limiting, and security headers
+- Authenticated citizen workspace with saved profiles, saved opportunities,
+  and application progress tracking
 
 ## Project status
 
@@ -407,6 +409,25 @@ All API routes use the `/api/v1` prefix.
 ```text
 GET /api/v1/health
 ```
+
+### Citizen workspace API
+
+After signing in, send the returned access token as a bearer token:
+
+```text
+GET    /api/v1/profile
+PUT    /api/v1/profile
+GET    /api/v1/saved-opportunities
+POST   /api/v1/saved-opportunities/{opportunity_id}
+DELETE /api/v1/saved-opportunities/{opportunity_id}
+GET    /api/v1/applications
+POST   /api/v1/applications
+PATCH  /api/v1/applications/{application_id}
+```
+
+The browser UI exposes these features under **My workspace**. Profile data is
+stored per account, while saved opportunities and tracker entries remain
+available after signing out and back in.
 
 ### Opportunities
 

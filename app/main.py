@@ -9,7 +9,7 @@ from app.config import get_settings
 from app.database import Base, make_engine, make_session_factory
 from app.errors import register_error_handlers
 from app.middleware import install_request_guards
-from app.routers import admin, auth, chat, eligibility, health, health_topics, opportunities, plan
+from app.routers import admin, auth, chat, citizen, eligibility, health, health_topics, opportunities, plan
 from app.seed import database_is_empty, load_seed_data
 from app.services.sync import sync_configured_sources
 from app.models import User
@@ -86,6 +86,7 @@ def create_app() -> FastAPI:
     application.include_router(admin.router, prefix="/api/v1")
     application.include_router(chat.router, prefix="/api/v1")
     application.include_router(auth.router, prefix="/api/v1")
+    application.include_router(citizen.router, prefix="/api/v1")
     Path("data").mkdir(exist_ok=True)
     ui_directory = Path(__file__).resolve().parent.parent / "ui"
     application.mount("/", StaticFiles(directory=ui_directory, html=True), name="ui")

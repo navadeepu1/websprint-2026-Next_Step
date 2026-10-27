@@ -20,6 +20,7 @@
         <a href="#opportunities" data-view="opportunities">Opportunities</a>
         <a href="#health-topics" data-view="health-topics">Health topics</a>
         <a href="#plan" data-view="plan">My action plan</a>
+        <a href="#workspace" data-view="workspace">My workspace</a>
       </nav>
       <span class="api-pill"><i></i><span id="api-status">Checking API</span></span>
       <button class="auth-button" id="auth-button" type="button">Sign in</button>
@@ -108,7 +109,7 @@
               <label>Disability status<select name="has_disability"><option value="">Not sure / prefer not to say</option><option value="true">Yes</option><option value="false">No</option></select></label>
             </div>
             <div id="profile-error" class="inline-error" role="alert" hidden></div>
-            <button class="button primary full" type="submit">Check opportunities <span>→</span></button>
+            <div class="button-row"><button class="button primary" type="submit">Check opportunities <span>→</span></button><button class="button ghost" id="save-profile" type="button">Save profile</button></div>
           </form>
           <div class="panel guidance-panel"><span class="guidance-icon">✦</span><h2>A fairer answer</h2><p>Eligibility is a guide, not a final decision. When a detail is missing, NextStep shows “possibly eligible” so you know what to verify on the official portal.</p><div class="trust-row"><span>🔒</span><span>Your profile stays in this browser session.</span></div></div>
         </div>
@@ -132,6 +133,16 @@
         <div class="page-heading"><div><p class="eyebrow">Turn results into momentum</p><h1 id="plan-title">My action plan</h1><p>Use the same profile to create a checklist, document list, and official links.</p></div></div>
         <div class="workspace-grid"><div class="panel plan-intro"><h2>Ready for a practical plan?</h2><p>Generate JSON for the app view or Markdown for sharing and printing. The plan reflects the current profile and catalogue.</p><button class="button primary" data-go="eligibility">Edit profile first <span>→</span></button></div><div class="panel format-panel"><label>Output format<select id="plan-format"><option value="json">Interactive checklist (JSON)</option><option value="markdown">Printable Markdown</option></select></label><button class="button secondary full" id="generate-plan">Generate my plan</button></div></div>
         <div id="plan-results" class="results-area" hidden></div>
+      </section>
+
+      <section id="workspace" class="view" aria-labelledby="workspace-title">
+        <div class="page-heading"><div><p class="eyebrow">Your progress</p><h1 id="workspace-title">My workspace</h1><p>Keep your profile, promising opportunities, and application progress together.</p></div></div>
+        <div id="workspace-login" class="notice">Sign in to save your profile and track opportunities across sessions.</div>
+        <div class="workspace-grid">
+          <div class="panel"><div class="panel-heading"><div><h2>Saved profile</h2><p>Used to prefill future eligibility checks.</p></div></div><div id="saved-profile"><div class="empty">No saved profile yet.</div></div></div>
+          <div class="panel"><div class="panel-heading"><div><h2>Saved opportunities</h2><p>Shortlist records to review later.</p></div></div><div id="saved-opportunities"><div class="empty">Nothing saved yet.</div></div></div>
+        </div>
+        <div class="panel workspace-tracker"><div class="panel-heading"><div><h2>Application tracker</h2><p>Track each opportunity from interest to completion.</p></div></div><div id="application-list"><div class="empty">No applications tracked yet.</div></div></div>
       </section>
     </main>
     <section class="auth-dialog" id="auth-dialog" hidden aria-labelledby="auth-title">

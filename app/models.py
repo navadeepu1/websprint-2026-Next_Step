@@ -88,3 +88,32 @@ class AuthSession(Base):
     user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    profile: Mapped[dict] = mapped_column(JSON, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
+class SavedOpportunity(Base):
+    __tablename__ = "saved_opportunities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    opportunity_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
+class ApplicationTracker(Base):
+    __tablename__ = "application_tracker"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    opportunity_id: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="interested")
+    notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    next_step: Mapped[str] = mapped_column(String(300), nullable=False, default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

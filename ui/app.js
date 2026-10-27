@@ -79,6 +79,7 @@ async function submitAuth(event) {
     accessToken = result.access_token;
     localStorage.setItem("nextstep_access_token", accessToken);
     updateAuthButton(result.user);
+    await loadSavedProfileIntoForm();
     closeAuth();
     showToast(`Signed in as ${result.user.display_name}.`);
   } catch (problem) {
@@ -87,10 +88,32 @@ async function submitAuth(event) {
   }
 }
 
+async function loadSavedProfileIntoForm() {
+  if (!accessToken) return;
+  try {
+    const profile = await request("/profile");
+    const form = $("#profile-form");
+    for (const [field, value] of Object.entries(profile)) {
+      const input = form.elements.namedItem(field);
+      if (!input || value === null || value === undefined) continue;
+      if (field === "need") {
+        form.querySelectorAll('input[name="need"]').forEach((checkbox) => { checkbox.checked = value.includes(checkbox.value); });
+      } else if (input.type === "checkbox") {
+        input.checked = value;
+      } else if (input.type !== "submit") {
+        input.value = value;
+      }
+    }
+  } catch (problem) {
+    if (!problem.message.includes("No saved profile")) showToast(problem.message);
+  }
+}
+
 async function initializeAuth() {
   if (!accessToken) return;
   try {
     updateAuthButton(await request("/auth/me"));
+    await loadSavedProfileIntoForm();
   } catch (_) {
     accessToken = null;
     localStorage.removeItem("nextstep_access_token");
@@ -113,6 +136,7 @@ function navigate(view) {
   $$(".main-nav a").forEach((link) => link.classList.toggle("active", link.dataset.view === target));
   if (target === "opportunities" && !$("#opportunity-list").dataset.loaded) loadOpportunities();
   if (target === "health-topics" && !$("#topic-list").dataset.loaded) loadTopics();
+  if (target === "workspace") loadWorkspace();
 }
 
 function profileFromForm() {
@@ -169,7 +193,7 @@ async function checkEligibility(event) {
 }
 
 function opportunityMarkup(item) {
-  return `<article class="opportunity-card"><span class="card-tag">${escapeHtml(item.category.replaceAll("_", " "))}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="card-footer"><span class="status ${item.verified ? "ELIGIBLE" : "POSSIBLY_ELIGIBLE"}">${item.verified ? "Verified" : "Verify first"}</span><button class="text-link detail-button" data-opportunity="${escapeHtml(item.id)}">View details â†’</button></div></article>`;
+  return `<article class="opportunity-card"><span class="card-tag">${escapeHtml(item.category.replaceAll("_", " "))}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="card-footer"><span class="status ${item.verified ? "ELIGIBLE" : "POSSIBLY_ELIGIBLE"}">${item.verified ? "Verified" : "Verify first"}</span><button class="text-link detail-button" data-opportunity="${escapeHtml(item.id)}">View details â†’</button></div><div class="card-actions"><button class="button ghost small" data-save-opportunity="${escapeHtml(item.id)}">Save</button><button class="button secondary small" data-track-opportunity="${escapeHtml(item.id)}">Track</button></div></article>`;
 }
 
 async function loadOpportunities() {
@@ -183,7 +207,67 @@ async function loadOpportunities() {
     container.dataset.loaded = "true";
     container.innerHTML = items.length ? items.map(opportunityMarkup).join("") : `<div class="empty">No opportunities match these filters.</div>`;
     container.querySelectorAll("[data-opportunity]").forEach((button) => button.addEventListener("click", () => showOpportunity(button.dataset.opportunity)));
+    container.querySelectorAll("[data-save-opportunity]").forEach((button) => button.addEventListener("click", () => saveOpportunity(button.dataset.saveOpportunity)));
+    container.querySelectorAll("[data-track-opportunity]").forEach((button) => button.addEventListener("click", () => trackOpportunity(button.dataset.trackOpportunity)));
   } catch (problem) { setError(container, problem); }
+}
+
+async function saveProfile() {
+  try {
+    const profile = profileFromForm();
+    await request("/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profile) });
+    showToast("Profile saved to your workspace.");
+  } catch (problem) {
+    showToast(accessToken ? problem.message : "Sign in before saving your profile.");
+  }
+}
+
+async function saveOpportunity(id) {
+  try {
+    await request(`/saved-opportunities/${encodeURIComponent(id)}`, { method: "POST" });
+    showToast("Opportunity saved.");
+  } catch (problem) { showToast(problem.message); }
+}
+
+async function trackOpportunity(id) {
+  try {
+    await request("/applications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ opportunity_id: id }) });
+    showToast("Opportunity added to your tracker.");
+  } catch (problem) { showToast(problem.message); }
+}
+
+function workspaceProfileMarkup(profile) {
+  return `<div class="profile-summary"><strong>${escapeHtml(profile.occupation.replaceAll("_", " "))}</strong><span>${escapeHtml(profile.state)} · age ${profile.age}</span><span>${escapeHtml(profile.need.join(", "))}</span></div>`;
+}
+
+function applicationMarkup(item) {
+  return `<article class="tracker-row"><div><strong>${escapeHtml(item.opportunity.title)}</strong><small>${escapeHtml(item.next_step || "Add a next step")}</small></div><select data-application-status="${item.id}">${["interested", "preparing", "submitted", "in_review", "completed", "closed"].map((status) => `<option value="${status}" ${status === item.status ? "selected" : ""}>${status.replaceAll("_", " ")}</option>`).join("")}</select></article>`;
+}
+
+async function loadWorkspace() {
+  const loginNotice = $("#workspace-login");
+  if (!accessToken) {
+    loginNotice.hidden = false;
+    return;
+  }
+  loginNotice.hidden = true;
+  try {
+    const [profile, saved, applications] = await Promise.all([
+      request("/profile").catch(() => null),
+      request("/saved-opportunities"),
+      request("/applications"),
+    ]);
+    $("#saved-profile").innerHTML = profile ? workspaceProfileMarkup(profile) : `<div class="empty">Save your profile from the eligibility page.</div>`;
+    $("#saved-opportunities").innerHTML = saved.length ? saved.map((item) => `<div class="workspace-item"><strong>${escapeHtml(item.opportunity.title)}</strong><button class="text-link" data-track-opportunity="${escapeHtml(item.opportunity.id)}">Track</button></div>`).join("") : `<div class="empty">Nothing saved yet.</div>`;
+    $("#application-list").innerHTML = applications.length ? applications.map(applicationMarkup).join("") : `<div class="empty">No applications tracked yet.</div>`;
+    $("#saved-opportunities").querySelectorAll("[data-track-opportunity]").forEach((button) => button.addEventListener("click", () => trackOpportunity(button.dataset.trackOpportunity)));
+    $("#application-list").querySelectorAll("[data-application-status]").forEach((select) => select.addEventListener("change", async () => {
+      await request(`/applications/${select.dataset.applicationStatus}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: select.value }) });
+      showToast("Application status updated.");
+    }));
+  } catch (problem) {
+    setError($("#application-list"), problem);
+  }
 }
 
 async function showOpportunity(id) {
@@ -355,6 +439,7 @@ function init() {
   $$(".main-nav a").forEach((link) => link.addEventListener("click", () => navigate(link.dataset.view)));
   $$("[data-go]").forEach((button) => button.addEventListener("click", () => navigate(button.dataset.go)));
   $("#profile-form").addEventListener("submit", checkEligibility);
+  $("#save-profile").addEventListener("click", saveProfile);
   $("#load-opportunities").addEventListener("click", loadOpportunities);
   $("#topic-search-form").addEventListener("submit", (event) => {
     event.preventDefault();
