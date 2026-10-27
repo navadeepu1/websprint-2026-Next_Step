@@ -198,6 +198,25 @@ git clone https://github.com/navadeepu1/websprint-2026-Next_Step.git
 cd websprint-2026-Next_Step
 ```
 
+## Deploy on Render
+
+This repository includes a [`render.yaml`](render.yaml) Blueprint. In Render,
+choose **New > Blueprint**, connect this repository, and apply the Blueprint.
+It creates a Python web service with:
+
+- Uvicorn bound to Render's `$PORT`
+- `/api/v1/health` as the health check
+- A 1 GB persistent disk mounted at `/var/data`
+- SQLite stored at `/var/data/nextstep.db`
+- Render-generated values for `AUTH_SECRET` and `ADMIN_API_KEY`
+
+The Blueprint uses Render's Starter plan because persistent disks are not
+available on the free web-service plan. Before making the service public,
+review the generated admin key and replace the seeded demo credentials, or
+remove the demo-user seeding in `app/main.py`. Configure `GROQ_API_KEY` and
+set `AI_PROVIDER=groq` only if the optional chatbot is wanted. Set
+`CORS_ORIGINS` to the final frontend origin when the UI is hosted separately.
+
 To confirm the checkout:
 
 ```powershell
