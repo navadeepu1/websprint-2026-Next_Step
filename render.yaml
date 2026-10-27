@@ -2,20 +2,16 @@ services:
   - type: web
     name: nextstep
     runtime: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/v1/health
     autoDeploy: true
-    disk:
-      name: nextstep-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: APP_ENV
         value: production
       - key: DATABASE_URL
-        value: sqlite:////var/data/nextstep.db
+        value: sqlite:///data/nextstep.db
       - key: AUTH_SECRET
         generateValue: true
       - key: ADMIN_API_KEY
